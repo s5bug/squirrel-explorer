@@ -64,13 +64,20 @@ SQInteger write_to_out_buffer(void* cursor_v, void* buffer_v, SQInteger bufferLe
 
 EMSCRIPTEN_KEEPALIVE
 size_t compile_and_serialize_buffer(HSQUIRRELVM vm, char* buffer, int bufferSize, char* sourceName, out_buffer_t* pOutBuffer) {
-    sq_compilebuffer(vm, buffer, bufferSize, sourceName, false);
+    if(SQ_FAILED(sq_compilebuffer(vm, buffer, bufferSize, sourceName, false))) {
+        return 0;
+    }
     
     cursor_t curs;
     curs.out = pOutBuffer;
     curs.length = 0;
     
-    sq_writeclosure(vm, write_to_out_buffer, &curs);
+    if(SQ_FAILED(sq_writeclosure(vm, write_to_out_buffer, &curs))) {
+        sq_poptop(vm);
+        return 0;
+    }
+    
+    sq_poptop(vm);
     
     return curs.length;
 }

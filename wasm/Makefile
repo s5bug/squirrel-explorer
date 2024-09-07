@@ -16,8 +16,8 @@ AR = emar
 endif
 export AR
 
-DEBUG_CCFLAGS ?= -O0 -g -fno-rtti -Wall
-DEBUG_CXXFLAGS ?= -O0 -g -fno-rtti -Wall
+DEBUG_CCFLAGS ?= -O2 -g -fno-rtti -Wall
+DEBUG_CXXFLAGS ?= -O2 -g -fno-rtti -Wall
 RELEASE_CCFLAGS ?= -O2 -fno-rtti -Wall
 RELEASE_CXXFLAGS ?= -O2 -fno-rtti -Wall
 
