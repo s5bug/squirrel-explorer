@@ -28,8 +28,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     env:
-      JAVA_OPTS: -Xms6G -Xmx6G -Xss4M -XX:ReservedCodeCacheSize=256M -XX:MaxMetaspaceSize=1G -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC -Dfile.encoding=UTF-8
-      JVM_OPTS:  -Xms6G -Xmx6G -Xss4M -XX:ReservedCodeCacheSize=256M -XX:MaxMetaspaceSize=1G -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC -Dfile.encoding=UTF-8
+      JAVA_OPTS: -Xms6G -Xmx6G -Xss4M
+      JVM_OPTS:  -Xms6G -Xmx6G -Xss4M
     steps:
       - name: Checkout
         uses: actions/checkout@v4
