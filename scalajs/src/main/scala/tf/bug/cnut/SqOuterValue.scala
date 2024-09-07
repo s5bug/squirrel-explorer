@@ -14,10 +14,10 @@ case class SqOuterValue(
   name: SqObject
 ) {
 
-  def doc: Doc = Doc.intercalate(Doc.char(',') + Doc.lineOrSpace, Vector(
+  def doc: Doc = Doc.text("SqOuterValue(") + Doc.intercalate(Doc.char(',') + Doc.space, Vector(
     Doc.text("sqOuterType = ") + Doc.text(sqOuterType.toString),
     Doc.text("src = ") + src.doc,
     Doc.text("name = ") + name.doc
-  )).tightBracketBy(Doc.text("SqOuterValue("), Doc.char(')'))
+  )) + Doc.char(')')
 
 }

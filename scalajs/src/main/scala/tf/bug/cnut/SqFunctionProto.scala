@@ -18,9 +18,20 @@ case class SqFunctionProto(
   varparams: Int
 ) {
 
-  inline def renderVector[A](inline label: String, inline vector: Vector[A], inline docf: A => Doc): Doc =
-    Doc.text(label) + Doc.intercalate(Doc.char(',') + Doc.lineOrSpace, vector.map(docf))
+  inline def renderVector[A](inline label: String, inline vector: Vector[A], inline docf: A => Doc): Doc = {
+    val maximumIndex = vector.size - 1
+    val maximumIndexLength = maximumIndex.toString.length
+
+    val commentedAs: Vector[Doc] =
+      vector.zipWithIndex.map { case (e, i) =>
+        val iString = i.toString
+        val spc = " " * (maximumIndexLength - iString.length)
+        Doc.text("/* ") + Doc.text(spc) + Doc.text(iString) + Doc.text(" */ ") + docf(e)
+      }
+
+    Doc.text(label) + Doc.intercalate(Doc.char(',') + Doc.lineOrSpace, commentedAs)
       .tightBracketBy(Doc.text("Vector("), Doc.char(')'))
+  }
 
   def doc: Doc =
     Doc.intercalate(Doc.char(',') + Doc.lineOrSpace, Vector(

@@ -9,11 +9,11 @@ case class SqLocalVarInfo(
   endOp: Long
 ) {
 
-  def doc: Doc = Doc.intercalate(Doc.char(',') + Doc.lineOrSpace, Vector(
+  def doc: Doc = Doc.text("SqLocalVarInfo(") + Doc.intercalate(Doc.char(',') + Doc.space, Vector(
     Doc.text("name = ") + name.doc,
     Doc.text("pos = ") + Doc.text(pos.toString),
     Doc.text("startOp = ") + Doc.text(startOp.toString),
     Doc.text("endOp = ") + Doc.text(endOp.toString)
-  )).tightBracketBy(Doc.text("SqLocalVarInfo("), Doc.char(')'))
+  )) + Doc.char(')')
 
 }

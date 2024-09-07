@@ -7,9 +7,9 @@ case class SqLineInfo(
   op: Int
 ) {
 
-  def doc: Doc = Doc.intercalate(Doc.char(',') + Doc.lineOrSpace, Vector(
+  def doc: Doc = Doc.text("SqLineInfo(") + Doc.intercalate(Doc.char(',') + Doc.space, Vector(
     Doc.text("line = ") + Doc.text(line.toString),
     Doc.text("op = ") + Doc.text(op.toString)
-  )).tightBracketBy(Doc.text("SqLineInfo("), Doc.char(')'))
+  )) + Doc.char(')')
 
 }
