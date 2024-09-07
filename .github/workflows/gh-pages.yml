@@ -30,6 +30,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set up PNPM
+        uses: pnpm/action-setup@v4.0.0
+        with:
+          version: latest
+          run_install: false
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
       - name: Set up Emscripten
         uses: mymindstorm/setup-emsdk@v14
       - name: Build WASM module
@@ -40,12 +52,6 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: sbt
-      - name: Set up PNPM
-        uses: pnpm/action-setup@v4.0.0
-        with:
-          version: latest
-      - name: Install dependencies
-        run: pnpm install --force
       - name: Build frontend
         run: pnpm run build
       - name: Setup Pages

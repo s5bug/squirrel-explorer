@@ -40,8 +40,8 @@ lazy val squirrelexplorer = project.in(file("."))
 
     externalNpm := {
       val pnpm =
-        if(System.getProperty("os.name").contains("Windows")) Seq("pwsh", "-c", "pnpm", "install")
-        else Seq("pnpm", "install")
+        if(System.getProperty("os.name").contains("Windows")) Seq("pwsh", "-c", "pnpm", "install", "--prod=false")
+        else Seq("pnpm", "install", "--prod=false")
       Process(pnpm, baseDirectory.value.getParentFile).!
       baseDirectory.value.getParentFile
     },
