@@ -1,0 +1,33 @@
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+#app {
+  height: 100%;
+}
+
+#grid-container {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+#grid-container > #left-editor {
+  height: 100%;
+  grid-column: 1;
+  grid-row: 1/-1;
+}
+
+#grid-container > #topright-editor {
+  height: 100%;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+#grid-container > #bottomright-editor {
+  height: 100%;
+  grid-column: 2;
+  grid-row: 2;
+}
