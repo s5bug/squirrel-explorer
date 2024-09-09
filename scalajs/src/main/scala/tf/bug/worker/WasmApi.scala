@@ -1,7 +1,8 @@
-package tf.bug
+package tf.bug.worker
 
 import cats.effect.IO
 import scala.scalajs.js
+import scala.scalajs.js.Promise
 import scala.scalajs.js.annotation.{JSImport, JSName}
 import typings.std.Uint8Array
 
@@ -59,9 +60,7 @@ object WasmApi {
   @JSImport("/wasm/api.js", JSImport.Default)
   private val wasmModule: js.Function1[js.Dictionary[js.Dynamic], js.Promise[WasmApi]] = js.native
 
-  def get: IO[WasmApi] =
-    IO.fromPromise(IO.delay {
-      wasmModule.apply(js.Dictionary())
-    })
+  def get: Promise[WasmApi] =
+    wasmModule.apply(js.Dictionary())
 
 }

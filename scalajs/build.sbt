@@ -1,4 +1,4 @@
-import org.scalajs.linker.interface.ModuleSplitStyle
+import org.scalajs.linker.interface.{ModuleInitializer, ModuleSplitStyle}
 import scala.sys.process.Process
 
 lazy val squirrelexplorer = project.in(file("."))
@@ -6,17 +6,20 @@ lazy val squirrelexplorer = project.in(file("."))
   .settings(
     scalaVersion := "3.5.0",
 
-    // Tell Scala.js that this is an application with a main method
-    scalaJSUseMainModuleInitializer := true,
-    mainClass := Some("tf.bug.SquirrelExplorer"),
+    // We have two main methods, so we explicitly emit two modules:
+    scalaJSUseMainModuleInitializer := false,
+    Compile / scalaJSModuleInitializers ++= Seq(
+      ModuleInitializer.mainMethodWithArgs("tf.bug.fe.SquirrelExplorer", "main").withModuleID("main"),
+      ModuleInitializer.mainMethodWithArgs("tf.bug.worker.SquirrelWorker", "main").withModuleID("worker")
+    ),
 
-    /* Configure Scala.js to emit modules in the optimal way to
-     * connect to Vite's incremental reload.
-     * - emit ECMAScript modules
-     * - emit as many small modules as possible for classes in the "tf.bug" package
-     * - emit as few (large) modules as possible for all other classes
-     *   (in particular, for the standard library)
-     */
+      /* Configure Scala.js to emit modules in the optimal way to
+       * connect to Vite's incremental reload.
+       * - emit ECMAScript modules
+       * - emit as many small modules as possible for classes in the "tf.bug" package
+       * - emit as few (large) modules as possible for all other classes
+       *   (in particular, for the standard library)
+       */
     scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.ESModule)
         .withModuleSplitStyle(

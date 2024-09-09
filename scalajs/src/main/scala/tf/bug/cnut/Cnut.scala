@@ -51,7 +51,7 @@ object Cnut {
     (Vector[SqObject], Vector[SqObject], Vector[SqOuterValue], Vector[SqLocalVarInfo],
       Vector[SqLineInfo], Vector[Int], Vector[SqInstruction], Vector[SqFunctionProto])
   ] =
-    (int32L :: int32L :: int32L :: int32L :: int32L :: int32L :: int32L :: int32L).flatZip {
+    (int32L :: int32L :: int32L :: int32L :: int32L :: int32L :: int32L :: int32L).consume {
       case (nLiterals, nParameters, nOuterValues, nLocalVarInfos, nLineInfos, nDefaultParams, nInstructions, nFunctions) =>
         val lits = sqClosureStreamPart ~> vectorOfN(provide(nLiterals), sqObject)
         val params = sqClosureStreamPart ~> vectorOfN(provide(nParameters), sqObject)
@@ -62,10 +62,9 @@ object Cnut {
         val instructions = sqClosureStreamPart ~> vectorOfN(provide(nInstructions), sqInstruction)
         val functions = sqClosureStreamPart ~> vectorOfN(provide(nFunctions), sqFunctionProto)
         lits :: params :: outerVals :: localVars :: lineInfos :: defaultParams :: instructions :: functions
-    }.xmap(
-      { case (counts, vecs) => vecs },
-      vecs => (vecs.map[[X] =>> Int]([t] => (v: t) => v.asInstanceOf[Vector[?]].size).asInstanceOf[(Int, Int, Int, Int, Int, Int, Int, Int)], vecs)
-    )
+    } { vecs =>
+      vecs.map[[X] =>> Int]([t] => (v: t) => v.asInstanceOf[Vector[?]].size).asInstanceOf[(Int, Int, Int, Int, Int, Int, Int, Int)]
+    }
 
   final val sqFunctionProto: Codec[SqFunctionProto] = (
     sqClosureStreamPart ~>
