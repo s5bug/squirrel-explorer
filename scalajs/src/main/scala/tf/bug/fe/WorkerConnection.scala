@@ -11,9 +11,7 @@ import scala.scalajs.js.typedarray.Uint8Array
 
 abstract class WorkerConnection[-A, +B] {
 
-  def send(element: A): IO[Unit]
-
-  def stream: Stream[IO, B]
+  def callResponse(element: A): IO[B]
 
 }
 
@@ -22,26 +20,22 @@ object WorkerConnection {
   @js.native
   @JSImport("scalajs:compilerworker.js?worker&url", JSImport.Default)
   private val compilerWorkerJsUrl: String = js.native
-  
+
   @js.native
   @JSImport("scalajs:explorerworker.js?worker&url", JSImport.Default)
   private val explorerWorkerJsUrl: String = js.native
 
-  private def ofUrl[A, B](url: String): Resource[IO, WorkerConnection[A, B]] =
-    Dispatcher.sequential[IO].flatMap { disp =>
-      Channel.unbounded[IO, B].toResource.flatMap { chan =>
-        val opts = new WorkerOptions {}
-        opts.`type` = WorkerType.module
-        val internal = new Worker(url, opts)
+  private def ofUrl[A, B](url: String): Resource[IO, WorkerConnection[A, B]] = {
+    val acquire = IO.delay {
+      val opts = new WorkerOptions {}
+      opts.`type` = WorkerType.module
+      val internal = new Worker(url, opts)
 
-        val acquire = IO.delay {
-          internal.onmessage = ev => disp.unsafeRunAndForget(chan.send(ev.data.asInstanceOf[B]))
-          new WorkerConnectionWrapper(internal, chan.stream)
-        }
-
-        Resource.make(acquire)(_.terminate)
-      }
+      new WorkerConnectionWrapper(internal)
     }
+
+    Resource.make(acquire)(_.terminate)
+  }
 
   def ofCompiler: Resource[IO, WorkerConnection[String, String]] =
     ofUrl(compilerWorkerJsUrl)
@@ -49,16 +43,18 @@ object WorkerConnection {
   def ofExplorer: Resource[IO, WorkerConnection[Uint8Array, String]] =
     ofUrl(explorerWorkerJsUrl)
   
-  private final class WorkerConnectionWrapper[-A, +B](val internal: Worker, val stream: Stream[IO, B]) extends WorkerConnection[A, B] {
-    
+  private final class WorkerConnectionWrapper[-A, +B](val internal: Worker) extends WorkerConnection[A, B] {
+
+    override def callResponse(element: A): IO[B] = IO.async_[B] { cb =>
+      internal.onmessage = m => cb(Right(m.data.asInstanceOf[B]))
+      internal.postMessage(element.asInstanceOf[js.Any])
+    }.uncancelable
+
     def terminate: IO[Unit] = IO.delay {
       internal.onmessage = js.undefined.asInstanceOf
       internal.terminate()
     }
 
-    override def send(code: A): IO[Unit] =
-      IO.delay(internal.postMessage(code.asInstanceOf[js.Any]))
-    
   }
 
 }

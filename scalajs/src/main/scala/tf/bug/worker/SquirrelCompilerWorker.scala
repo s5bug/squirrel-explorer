@@ -19,11 +19,11 @@ object SquirrelCompilerWorker {
       val vm = wasm.sqOpen()
 
       js.Dynamic.global.onmessage =
-        (e => onMessage(wasm, vm, outBuf, e.data.asInstanceOf[String])): js.Function1[MessageEvent, Unit]
+        (e => returnMessage(onMessage(wasm, vm, outBuf, e.data.asInstanceOf[String]))): js.Function1[MessageEvent, Unit]
 
       if(accumulator.nonEmpty) {
         val recent = accumulator.last
-        onMessage(wasm, vm, outBuf, recent)
+        returnMessage(onMessage(wasm, vm, outBuf, recent))
       }
     }
   }
@@ -31,7 +31,7 @@ object SquirrelCompilerWorker {
   def returnMessage(content: String): Unit =
     js.Dynamic.global.postMessage(content)
 
-  def onMessage(wasm: WasmApi, vm: Int, outBuf: Int, content: String): Unit = {
+  def onMessage(wasm: WasmApi, vm: Int, outBuf: Int, content: String): String = {
     val allocateContent = wasm.stringToNewUtf8(content)
     val contentLength = wasm.lengthBytesUtf8(content)
     val compiledLength = wasm.compileAndSerializeBuffer(vm, allocateContent, contentLength, 0, outBuf)
@@ -44,11 +44,11 @@ object SquirrelCompilerWorker {
       val cnut = Cnut.cnutUtf8.decode(bytes.bits)
       cnut match {
         case Attempt.Successful(DecodeResult(value, _)) =>
-          val response = value.doc.renderTrim(0)
-          returnMessage(response)
-        case Attempt.Failure(err) => throw new RuntimeException(err.toString)
+          value.doc.renderTrim(0)
+        case Attempt.Failure(err) =>
+          "[error] " + err.toString
       }
-    }
+    } else "[error] Compilation failed"
   }
 
 }

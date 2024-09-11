@@ -12,21 +12,21 @@ object SquirrelExplorerWorker {
 
   def main(args: Array[String]): Unit = {
     js.Dynamic.global.onmessage =
-      (e => onMessage(e.data.asInstanceOf[Uint8Array])): js.Function1[MessageEvent, Unit]
+      (e => returnMessage(onMessage(e.data.asInstanceOf[Uint8Array]))): js.Function1[MessageEvent, Unit]
   }
 
   def returnMessage(content: String): Unit =
     js.Dynamic.global.postMessage(content)
 
-  def onMessage(content: Uint8Array): Unit = {
+  def onMessage(content: Uint8Array): String = {
     val bytes = ByteVector.fromUint8Array(content)
 
     val cnut = Cnut.cnutSjis.decode(bytes.bits)
     cnut match {
       case Attempt.Successful(DecodeResult(value, _)) =>
-        val response = value.doc.renderTrim(0)
-        returnMessage(response)
-      case Attempt.Failure(err) => throw new RuntimeException(err.toString)
+        value.doc.renderTrim(0)
+      case Attempt.Failure(err) =>
+        err.toString
     }
   }
 

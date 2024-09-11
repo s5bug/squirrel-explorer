@@ -78,6 +78,26 @@ object MonacoDiffEditor {
 
   extension(editor: MonacoDiffEditor) {
 
+    def setOriginalDiffCalc(value: String): IO[Unit] = IO.async[Unit] { cb =>
+      IO.delay {
+        val disposeCb: IDisposable = editor.onDidUpdateDiff(ev => {
+          cb(Right(()))
+        })
+        editor.getOriginalEditor().setValue(value)
+        Some(IO.delay(disposeCb.dispose()))
+      }
+    }
+
+    def setModifiedDiffCalc(value: String): IO[Unit] = IO.async[Unit] { cb =>
+      IO.delay {
+        val disposeCb: IDisposable = editor.onDidUpdateDiff(ev => {
+          cb(Right(()))
+        })
+        editor.getModifiedEditor().setValue(value)
+        Some(IO.delay(disposeCb.dispose()))
+      }
+    }
+
     def model: IO[MonacoDiffModel] = IO.delay(editor.getModel().asInstanceOf[MonacoDiffModel])
 
   }

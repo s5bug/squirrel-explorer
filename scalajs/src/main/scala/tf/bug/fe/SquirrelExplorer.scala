@@ -5,6 +5,7 @@ import calico.html.io.{*, given}
 import cats.effect.{IO, Resource}
 import cats.syntax.all.*
 import fs2.*
+import fs2.concurrent.SignallingRef
 import fs2.dom.*
 import org.scalajs.dom.FileReader
 import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
@@ -17,29 +18,44 @@ object SquirrelExplorer extends IOWebApp {
       // TODO make this a request/response API rather than request-stream/response-stream
       compilerWk <- WorkerConnection.ofCompiler
       explorerWk <- WorkerConnection.ofExplorer
-      p <- program(compilerWk, explorerWk)
+      renderedCompiled <- SignallingRef.of[IO, String]("").toResource
+      renderedUploaded <- SignallingRef.of[IO, String]("").toResource
+      p <- program(compilerWk, explorerWk, renderedCompiled, renderedUploaded)
     } yield p
 
-  def program(compilerWk: WorkerConnection[String, String], explorerWk: WorkerConnection[Uint8Array, String]): Resource[IO, HtmlElement[IO]] = {
+  def program(
+    compilerWk: WorkerConnection[String, String],
+    explorerWk: WorkerConnection[Uint8Array, String],
+    renderedCompiled: SignallingRef[IO, String],
+    renderedUploaded: SignallingRef[IO, String]
+  ): Resource[IO, HtmlElement[IO]] = {
     div(
       idAttr := "grid-container",
-      leftEditor(compilerWk),
-      rightEditor(compilerWk, explorerWk)
+      leftEditor(compilerWk, renderedCompiled),
+      rightEditor(explorerWk, renderedCompiled, renderedUploaded)
     )
   }
 
-  def leftEditor(wk: WorkerConnection[String, String]): Resource[IO, HtmlElement[IO]] = {
+  def leftEditor(wk: WorkerConnection[String, String], renderedCompiled: SignallingRef[IO, String]): Resource[IO, HtmlElement[IO]] = {
     div(
       idAttr := "left-editor"
     ).flatTap { container =>
       MonacoEditor.create(container).flatMap { editor =>
-        editor.discreteModel.switchMap(model => model.discreteValue.evalMap(wk.send))
-          .compile.drain.background
+        editor.discreteModel.switchMap(model => model.discreteValue.foreach { v =>
+          wk.callResponse(v).flatMap { resp =>
+            if(resp.startsWith("[error]")) IO.unit
+            else renderedCompiled.set(resp)
+          }
+        }).compile.drain.background
       }
     }
   }
 
-  def rightEditor(compilerWk: WorkerConnection[String, String], explorerWk: WorkerConnection[Uint8Array, String]): Resource[IO, HtmlElement[IO]] = {
+  def rightEditor(
+    explorerWk: WorkerConnection[Uint8Array, String],
+    renderedCompiled: SignallingRef[IO, String],
+    renderedUploaded: SignallingRef[IO, String]
+  ): Resource[IO, HtmlElement[IO]] = {
     div(
       idAttr := "right-panel",
       input.withSelf { self => (
@@ -57,24 +73,18 @@ object SquirrelExplorer extends IOWebApp {
                 }
                 reader.readAsArrayBuffer(fl.item(0))
               }
-              getUintArray >>= explorerWk.send
+              getUintArray >>= explorerWk.callResponse >>= renderedUploaded.set
             }
           }
         })
       )},
       div(idAttr := "right-editor").flatTap { container =>
         MonacoDiffEditor.create(container).flatMap { editor =>
-          val setModified = compilerWk.stream.foreach { content =>
-            editor.model.flatMap { model =>
-              model.modified.setValue(content)
-            }
+          val renderedDiscrete = renderedUploaded.discrete.either(renderedCompiled.discrete).foreach {
+            case Left(uploaded) => editor.setOriginalDiffCalc(uploaded)
+            case Right(compiled) => editor.setModifiedDiffCalc(compiled)
           }
-          val setOriginal = explorerWk.stream.foreach { content =>
-            editor.model.flatMap { model =>
-              model.original.setValue(content)
-            }
-          }
-          setModified.merge(setOriginal).compile.drain.background
+          renderedDiscrete.compile.drain.background
         }
       }
     )
