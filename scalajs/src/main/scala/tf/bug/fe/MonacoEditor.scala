@@ -60,6 +60,7 @@ object MonacoDiffEditor {
     val opts: IStandaloneDiffEditorConstructionOptions = IStandaloneDiffEditorConstructionOptions()
     opts.automaticLayout = true
     opts.readOnly = readOnly
+    opts.maxComputationTime = 20 * 60 * 1000 // 20 minutes
 
     Resource.make[IO, typings.monacoEditor.mod.editor.IStandaloneDiffEditor](
       MonacoModel.create.flatMap { originalModel =>
