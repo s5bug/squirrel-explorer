@@ -8,10 +8,12 @@ import cats.syntax.all.*
 import fs2.*
 import fs2.concurrent.{Channel, SignallingRef}
 import typings.monacoEditor.mod.IDisposable
-import typings.monacoEditor.mod.editor.IStandaloneEditorConstructionOptions
+import typings.monacoEditor.mod.editor.{IStandaloneDiffEditorConstructionOptions, IStandaloneEditorConstructionOptions}
 
 opaque type MonacoEditor = typings.monacoEditor.mod.editor.IStandaloneCodeEditor
+opaque type MonacoDiffEditor = typings.monacoEditor.mod.editor.IStandaloneDiffEditor
 opaque type MonacoModel = typings.monacoEditor.mod.editor.ITextModel
+opaque type MonacoDiffModel = typings.monacoEditor.mod.editor.IDiffEditorModel
 
 object MonacoEditor {
 
@@ -52,6 +54,35 @@ object MonacoEditor {
 
 }
 
+object MonacoDiffEditor {
+
+  def create(container: fs2.dom.HtmlElement[IO], readOnly: Boolean = true): Resource[IO, MonacoDiffEditor] = {
+    val opts: IStandaloneDiffEditorConstructionOptions = IStandaloneDiffEditorConstructionOptions()
+    opts.automaticLayout = true
+    opts.readOnly = readOnly
+
+    Resource.make[IO, typings.monacoEditor.mod.editor.IStandaloneDiffEditor](
+      MonacoModel.create.flatMap { originalModel =>
+        MonacoModel.create.flatMap { modifiedModel =>
+          IO.delay {
+            val ed = typings.monacoEditor.mod.editor.createDiffEditor(container.asInstanceOf, opts)
+            val diffMod = typings.monacoEditor.mod.editor.IDiffEditorModel(original = originalModel, modified = modifiedModel)
+            ed.setModel(diffMod)
+            ed
+          }
+        }
+      }
+    )(ed => IO.delay(ed.dispose()))
+  }
+
+  extension(editor: MonacoDiffEditor) {
+
+    def model: IO[MonacoDiffModel] = IO.delay(editor.getModel().asInstanceOf[MonacoDiffModel])
+
+  }
+
+}
+
 object MonacoModel {
 
   private def valueStateHolder(model: MonacoModel): Resource[IO, SignallingRef[IO, String]] =
@@ -69,6 +100,10 @@ object MonacoModel {
       }
     }
 
+  def create: IO[MonacoModel] = IO.delay {
+    typings.monacoEditor.mod.editor.createModel("")
+  }
+
   extension (model: MonacoModel) {
 
     def discreteValue: Stream[IO, String] =
@@ -76,6 +111,17 @@ object MonacoModel {
 
     def setValue(s: String): IO[Unit] =
       IO.delay(model.setValue(s))
+
+  }
+
+}
+
+object MonacoDiffModel {
+
+  extension (model: MonacoDiffModel) {
+
+    def modified: MonacoModel = model.modified
+    def original: MonacoModel = model.original
 
   }
 

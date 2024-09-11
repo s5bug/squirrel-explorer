@@ -10,7 +10,8 @@ lazy val squirrelexplorer = project.in(file("."))
     scalaJSUseMainModuleInitializer := false,
     Compile / scalaJSModuleInitializers ++= Seq(
       ModuleInitializer.mainMethodWithArgs("tf.bug.fe.SquirrelExplorer", "main").withModuleID("main"),
-      ModuleInitializer.mainMethodWithArgs("tf.bug.worker.SquirrelWorker", "main").withModuleID("worker")
+      ModuleInitializer.mainMethodWithArgs("tf.bug.worker.SquirrelCompilerWorker", "main").withModuleID("compilerworker"),
+      ModuleInitializer.mainMethodWithArgs("tf.bug.worker.SquirrelExplorerWorker", "main").withModuleID("explorerworker")
     ),
 
       /* Configure Scala.js to emit modules in the optimal way to

@@ -7,7 +7,7 @@ import scodec.{Attempt, DecodeResult}
 import scodec.bits.{BitVector, ByteVector}
 import tf.bug.cnut.Cnut
 
-object SquirrelWorker {
+object SquirrelCompilerWorker {
 
   def main(args: Array[String]): Unit = {
     val accumulator: js.Array[String] = js.Array()
@@ -21,8 +21,10 @@ object SquirrelWorker {
       js.Dynamic.global.onmessage =
         (e => onMessage(wasm, vm, outBuf, e.data.asInstanceOf[String])): js.Function1[MessageEvent, Unit]
 
-      val recent = accumulator.last
-      onMessage(wasm, vm, outBuf, recent)
+      if(accumulator.nonEmpty) {
+        val recent = accumulator.last
+        onMessage(wasm, vm, outBuf, recent)
+      }
     }
   }
 
@@ -39,12 +41,12 @@ object SquirrelWorker {
       val contentPtr = wasm.outBufferContent(outBuf)
       val bytes = ByteVector.fromUint8Array(wasm.heapU8.slice(contentPtr, contentPtr + compiledLength))
 
-      val cnut = Cnut.cnut.decode(bytes.bits)
+      val cnut = Cnut.cnutUtf8.decode(bytes.bits)
       cnut match {
         case Attempt.Successful(DecodeResult(value, _)) =>
           val response = value.doc.renderTrim(0)
           returnMessage(response)
-        case _ => ()
+        case Attempt.Failure(err) => throw new RuntimeException(err.toString)
       }
     }
   }

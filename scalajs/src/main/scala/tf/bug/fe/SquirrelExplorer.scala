@@ -6,6 +6,8 @@ import cats.effect.{IO, Resource}
 import cats.syntax.all.*
 import fs2.*
 import fs2.dom.*
+import org.scalajs.dom.FileReader
+import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
 import scodec.{Attempt, DecodeResult}
 
 object SquirrelExplorer extends IOWebApp {
@@ -13,20 +15,20 @@ object SquirrelExplorer extends IOWebApp {
   override def render: Resource[IO, HtmlElement[IO]] =
     for {
       // TODO make this a request/response API rather than request-stream/response-stream
-      wk <- WorkerConnection.default
-      p <- program(wk)
+      compilerWk <- WorkerConnection.ofCompiler
+      explorerWk <- WorkerConnection.ofExplorer
+      p <- program(compilerWk, explorerWk)
     } yield p
 
-  def program(wk: WorkerConnection): Resource[IO, HtmlElement[IO]] = {
+  def program(compilerWk: WorkerConnection[String, String], explorerWk: WorkerConnection[Uint8Array, String]): Resource[IO, HtmlElement[IO]] = {
     div(
       idAttr := "grid-container",
-      leftEditor(wk),
-      topRightEditor(wk),
-      bottomRightEditor
+      leftEditor(compilerWk),
+      rightEditor(compilerWk, explorerWk)
     )
   }
 
-  def leftEditor(wk: WorkerConnection): Resource[IO, HtmlElement[IO]] = {
+  def leftEditor(wk: WorkerConnection[String, String]): Resource[IO, HtmlElement[IO]] = {
     div(
       idAttr := "left-editor"
     ).flatTap { container =>
@@ -37,24 +39,45 @@ object SquirrelExplorer extends IOWebApp {
     }
   }
 
-  def topRightEditor(wk: WorkerConnection): Resource[IO, HtmlElement[IO]] = {
+  def rightEditor(compilerWk: WorkerConnection[String, String], explorerWk: WorkerConnection[Uint8Array, String]): Resource[IO, HtmlElement[IO]] = {
     div(
-      idAttr := "topright-editor"
-    ).flatTap { container =>
-      MonacoEditor.create(container, readOnly = true).flatMap { editor =>
-        wk.stream.foreach { content =>
-          editor.getModel.flatMap { model =>
-            model.setValue(content)
+      idAttr := "right-panel",
+      input.withSelf { self => (
+        `type` := "file",
+        onChange --> (_.foreach { ev =>
+          val files = IO.delay(self.asInstanceOf[org.scalajs.dom.HTMLInputElement].files)
+          files.flatMap { fl =>
+            if(fl.length < 1) IO.unit
+            else {
+              // TODO move this to a utility so it's easier to read
+              val getUintArray = IO.async_[Uint8Array] { cb =>
+                val reader = new FileReader()
+                reader.onload = { p =>
+                  cb(new Uint8Array(reader.result.asInstanceOf[ArrayBuffer]).asRight)
+                }
+                reader.readAsArrayBuffer(fl.item(0))
+              }
+              getUintArray >>= explorerWk.send
+            }
           }
-        }.compile.drain.background
+        })
+      )},
+      div(idAttr := "right-editor").flatTap { container =>
+        MonacoDiffEditor.create(container).flatMap { editor =>
+          val setModified = compilerWk.stream.foreach { content =>
+            editor.model.flatMap { model =>
+              model.modified.setValue(content)
+            }
+          }
+          val setOriginal = explorerWk.stream.foreach { content =>
+            editor.model.flatMap { model =>
+              model.original.setValue(content)
+            }
+          }
+          setModified.merge(setOriginal).compile.drain.background
+        }
       }
-    }
-  }
-
-  def bottomRightEditor: Resource[IO, HtmlElement[IO]] = {
-    div(
-      idAttr := "bottomright-editor"
-    ).flatTap(MonacoEditor.create(_, readOnly = true))
+    )
   }
 
 }
