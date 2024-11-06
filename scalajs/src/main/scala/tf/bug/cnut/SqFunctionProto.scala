@@ -1,7 +1,5 @@
 package tf.bug.cnut
 
-import org.typelevel.paiges.Doc
-
 case class SqFunctionProto(
   sourceName: SqObject,
   name: SqObject,
@@ -18,36 +16,27 @@ case class SqFunctionProto(
   varparams: Int
 ) {
 
-  inline def renderVector[A](inline label: String, inline vector: Vector[A], inline docf: A => Doc): Doc = {
-    val maximumIndex = vector.size - 1
-    val maximumIndexLength = maximumIndex.toString.length
-
-    val commentedAs: Vector[Doc] =
-      vector.zipWithIndex.map { case (e, i) =>
-        val iString = i.toString
-        val spc = " " * (maximumIndexLength - iString.length)
-        Doc.text("/* ") + Doc.text(spc) + Doc.text(iString) + Doc.text(" */ ") + docf(e)
-      }
-
-    Doc.text(label) + Doc.intercalate(Doc.char(',') + Doc.lineOrSpace, commentedAs)
-      .tightBracketBy(Doc.text("Vector("), Doc.char(')'))
+  def renderInto(renderLineInfos: Boolean, indent: Int, renderedCnut: MutableCnutRender): Unit = {
+    renderedCnut.fragment("FunctionProto(")
+    renderedCnut.line()
+    renderedCnut.renderField("sourceName", 2 + indent, () => renderedCnut.fragment(sourceName.show))
+    renderedCnut.renderField("name", 2 + indent, () => renderedCnut.fragment(name.show))
+    renderedCnut.renderVectorField("literals", 2 + indent, literals, l => renderedCnut.fragment(l.show))
+    renderedCnut.renderVectorField("parameters", 2 + indent, parameters, p => renderedCnut.fragment(p.show))
+    renderedCnut.renderVectorField("outerValues", 2 + indent, outerValues, _.renderInto(4 + indent, renderedCnut))
+    renderedCnut.renderVectorField("localVarInfos", 2 + indent, localVarInfos, _.renderInto(4 + indent, renderedCnut))
+    if(renderLineInfos) {
+      renderedCnut.renderVectorField("lineInfos", 2 + indent, lineInfos, _.renderInto(4 + indent, renderedCnut))
+    }
+    renderedCnut.renderVectorField("defaultParams", 2 + indent, defaultParams, i => renderedCnut.fragment(i.toString))
+    renderedCnut.renderVectorField("instructions", 2 + indent, instructions, i => i.renderInto(renderedCnut, this))
+    renderedCnut.renderVectorField("functions", 2 + indent, functions, f => f.renderInto(renderLineInfos, 4 + indent, renderedCnut))
+    renderedCnut.renderField("stackSize", 2 + indent, () => renderedCnut.fragment(stackSize.toString))
+    renderedCnut.renderField("bgenerator", 2 + indent, () => renderedCnut.fragment(bgenerator.toString))
+    renderedCnut.renderFieldLast("varparams", 2 + indent, () => renderedCnut.fragment(varparams.toString))
+    renderedCnut.line()
+    renderedCnut.space(indent)
+    renderedCnut.fragment(")")
   }
-
-  def doc: Doc =
-    Doc.intercalate(Doc.char(',') + Doc.lineOrSpace, Vector(
-      Doc.text("sourceName = ") + sourceName.doc,
-      Doc.text("name = ") + name.doc,
-      renderVector("literals = ", literals, _.doc),
-      renderVector("parameters = ", parameters, _.doc),
-      renderVector("outerValues = ", outerValues, _.doc),
-      renderVector("localVarInfos = ", localVarInfos, _.doc),
-      renderVector("lineInfos = ", lineInfos, _.doc),
-      renderVector("defaultParams = ", defaultParams, i => Doc.text(i.toString)),
-      renderVector("instructions = ", instructions, _.doc),
-      renderVector("functions = ", functions, _.doc),
-      Doc.text("stackSize = ") + Doc.text(stackSize.toString),
-      Doc.text("bgenerator = ") + Doc.text(bgenerator.toString),
-      Doc.text("varparams = ") + Doc.text(varparams.toString)
-    )).tightBracketBy(Doc.text("SqFunctionProto("), Doc.char(')'))
 
 }

@@ -3,17 +3,21 @@ package tf.bug.fe
 import cats.data.State
 import cats.effect.kernel.Concurrent
 import cats.effect.std.{Dispatcher, Queue}
-import cats.effect.{IO, Resource}
+import cats.effect.{IO, Ref, Resource}
 import cats.syntax.all.*
 import fs2.*
 import fs2.concurrent.{Channel, SignallingRef}
-import typings.monacoEditor.mod.IDisposable
+import scala.scalajs.js.Promise
+import typings.monacoEditor.mod
+import typings.monacoEditor.mod.{CancellationToken, IDisposable, Thenable}
 import typings.monacoEditor.mod.editor.{IStandaloneDiffEditorConstructionOptions, IStandaloneEditorConstructionOptions}
+import typings.monacoEditor.mod.languages.InlayHintList
 
 opaque type MonacoEditor = typings.monacoEditor.mod.editor.IStandaloneCodeEditor
 opaque type MonacoDiffEditor = typings.monacoEditor.mod.editor.IStandaloneDiffEditor
 opaque type MonacoModel = typings.monacoEditor.mod.editor.ITextModel
 opaque type MonacoDiffModel = typings.monacoEditor.mod.editor.IDiffEditorModel
+opaque type InlayHintsProvider = typings.monacoEditor.mod.languages.InlayHintsProvider
 
 object MonacoEditor {
 
@@ -56,15 +60,16 @@ object MonacoEditor {
 
 object MonacoDiffEditor {
 
-  def create(container: fs2.dom.HtmlElement[IO], readOnly: Boolean = true): Resource[IO, MonacoDiffEditor] = {
+  def create(container: fs2.dom.HtmlElement[IO], lang: String, name: String, readOnly: Boolean = true): Resource[IO, MonacoDiffEditor] = {
     val opts: IStandaloneDiffEditorConstructionOptions = IStandaloneDiffEditorConstructionOptions()
     opts.automaticLayout = true
     opts.readOnly = readOnly
     opts.maxComputationTime = 20 * 60 * 1000 // 20 minutes
+    opts.renderValidationDecorations = typings.monacoEditor.monacoEditorStrings.on
 
     Resource.make[IO, typings.monacoEditor.mod.editor.IStandaloneDiffEditor](
-      MonacoModel.create.flatMap { originalModel =>
-        MonacoModel.create.flatMap { modifiedModel =>
+      MonacoModel.create(lang, mod.Uri.parse(s"inmemory://${name}_original")).flatMap { originalModel =>
+        MonacoModel.create(lang, mod.Uri.parse(s"inmemory://${name}_modified")).flatMap { modifiedModel =>
           IO.delay {
             val ed = typings.monacoEditor.mod.editor.createDiffEditor(container.asInstanceOf, opts)
             val diffMod = typings.monacoEditor.mod.editor.IDiffEditorModel(original = originalModel, modified = modifiedModel)
@@ -78,24 +83,37 @@ object MonacoDiffEditor {
 
   extension(editor: MonacoDiffEditor) {
 
-    def setOriginalDiffCalc(value: String): IO[Unit] = IO.async[Unit] { cb =>
-      IO.delay {
+    def setOriginalResult(value: RenderResult, hints: Ref[IO, scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint]]): IO[Unit] = IO.async[Unit] { cb =>
+      val registerCallback = IO.delay {
         val disposeCb: IDisposable = editor.onDidUpdateDiff(ev => {
           cb(Right(()))
         })
-        editor.getOriginalEditor().setValue(value)
+        editor.getOriginalEditor().setValue(value.rawText)
         Some(IO.delay(disposeCb.dispose()))
       }
+      val setMarks = model.flatMap { m =>
+        IO(typings.monacoEditor.mod.editor.setModelMarkers(m.original, "cnut", value.markers))
+      }
+      val setHints = hints.set(value.hints)
+      (setHints, registerCallback, setMarks).mapN((_, cleanup, _) => cleanup)
     }
 
-    def setModifiedDiffCalc(value: String): IO[Unit] = IO.async[Unit] { cb =>
-      IO.delay {
+    def setModifiedResult(value: RenderResult, hints: Ref[IO, scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint]]): IO[Unit] = IO.async[Unit] { cb =>
+      val registerCallback = IO.delay {
         val disposeCb: IDisposable = editor.onDidUpdateDiff(ev => {
           cb(Right(()))
         })
-        editor.getModifiedEditor().setValue(value)
+        editor.getModifiedEditor().setValue(value.rawText)
         Some(IO.delay(disposeCb.dispose()))
       }
+      val setMarks = model.flatMap { m =>
+        scalajs.js.Dynamic.global.console.log("applying marks:", value.markers)
+        IO {
+          typings.monacoEditor.mod.editor.setModelMarkers(m.modified, "cnut", value.markers)
+        }
+      }
+      val setHints = hints.set(value.hints)
+      (setHints, registerCallback, setMarks).mapN((_, cleanup, _) => cleanup)
     }
 
     def model: IO[MonacoDiffModel] = IO.delay(editor.getModel().asInstanceOf[MonacoDiffModel])
@@ -121,17 +139,25 @@ object MonacoModel {
       }
     }
 
-  def create: IO[MonacoModel] = IO.delay {
-    typings.monacoEditor.mod.editor.createModel("")
+  def create(lang: String, uri: mod.Uri): IO[MonacoModel] = IO.delay {
+    typings.monacoEditor.mod.editor.createModel("", lang, uri)
   }
 
   extension (model: MonacoModel) {
+
+    inline def id: String = model.id
 
     def discreteValue: Stream[IO, String] =
       Stream.resource(valueStateHolder(model)).flatMap(_.discrete)
 
     def setValue(s: String): IO[Unit] =
       IO.delay(model.setValue(s))
+
+    def setLanguage(language: String): IO[Unit] =
+      IO(typings.monacoEditor.mod.editor.setModelLanguage(model, language))
+
+    def setMarkers(marks: scalajs.js.Array[typings.monacoEditor.mod.editor.IMarkerData]): IO[Unit] =
+      IO(typings.monacoEditor.mod.editor.setModelMarkers(model, "owner", marks))
 
   }
 
@@ -144,6 +170,33 @@ object MonacoDiffModel {
     def modified: MonacoModel = model.modified
     def original: MonacoModel = model.original
 
+  }
+
+}
+
+object InlayHintsProvider {
+
+  def register(lang: String)(func: (MonacoModel, typings.monacoEditor.mod.Range, typings.monacoEditor.mod.CancellationToken) =>
+    IO[typings.monacoEditor.mod.languages.InlayHintList]): Resource[IO, InlayHintsProvider] = {
+    create(func).flatTap { prov =>
+      val acquire = IO {
+        typings.monacoEditor.mod.languages.registerInlayHintsProvider(lang, prov)
+      }
+      val release = (disp: typings.monacoEditor.mod.IDisposable) => IO(disp.dispose())
+      Resource.make(acquire)(release)
+    }
+  }
+
+  def create(func: (MonacoModel, typings.monacoEditor.mod.Range, typings.monacoEditor.mod.CancellationToken) =>
+    IO[typings.monacoEditor.mod.languages.InlayHintList]): Resource[IO, InlayHintsProvider] = {
+    Dispatcher.sequential[IO].map { disp =>
+      new InlayHintsProvider {
+        override def provideInlayHints(model: mod.editor.ITextModel, range: mod.Range, token: mod.CancellationToken): mod.languages.ProviderResult[InlayHintList] =
+          disp.unsafeToPromise(func(model, range, token))
+            .asInstanceOf[typings.std.Promise[InlayHintList]]
+            .asInstanceOf
+      }
+    }
   }
 
 }

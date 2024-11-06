@@ -1,8 +1,10 @@
 package tf.bug.worker
 
+import com.github.plokhotnyuk.jsoniter_scala
 import org.scalajs.dom
 import org.scalajs.dom.MessageEvent
 import scala.scalajs.js
+import scala.scalajs.js.typedarray.Uint8Array
 import scodec.{Attempt, DecodeResult}
 import scodec.bits.{BitVector, ByteVector}
 import tf.bug.cnut.Cnut
@@ -17,37 +19,30 @@ object SquirrelCompilerWorker {
     WasmApi.get.`then` { (wasm: WasmApi) =>
       val outBuf = wasm.outBufferInit()
       val vm = wasm.sqOpen()
+      val emptyString = wasm.stringToNewUtf8("")
 
       js.Dynamic.global.onmessage =
-        (e => returnMessage(onMessage(wasm, vm, outBuf, e.data.asInstanceOf[String]))): js.Function1[MessageEvent, Unit]
+        (e => returnMessage(onMessage(wasm, vm, emptyString, outBuf, e.data.asInstanceOf[String]))): js.Function1[MessageEvent, Unit]
 
       if(accumulator.nonEmpty) {
         val recent = accumulator.last
-        returnMessage(onMessage(wasm, vm, outBuf, recent))
+        returnMessage(onMessage(wasm, vm, emptyString, outBuf, recent))
       }
     }
   }
 
-  def returnMessage(content: String): Unit =
-    js.Dynamic.global.postMessage(content)
+  def returnMessage(content: String | Uint8Array): Unit =
+    js.Dynamic.global.postMessage(content.asInstanceOf[js.Any])
 
-  def onMessage(wasm: WasmApi, vm: Int, outBuf: Int, content: String): String = {
+  def onMessage(wasm: WasmApi, vm: Int, sourceName: Int, outBuf: Int, content: String): String | Uint8Array = {
     val allocateContent = wasm.stringToNewUtf8(content)
     val contentLength = wasm.lengthBytesUtf8(content)
-    val compiledLength = wasm.compileAndSerializeBuffer(vm, allocateContent, contentLength, 0, outBuf)
+    val compiledLength = wasm.compileAndSerializeBuffer(vm, allocateContent, contentLength, sourceName, outBuf)
     wasm.free(allocateContent)
-
+    
     if (compiledLength != 0) {
       val contentPtr = wasm.outBufferContent(outBuf)
-      val bytes = ByteVector.fromUint8Array(wasm.heapU8.slice(contentPtr, contentPtr + compiledLength))
-
-      val cnut = Cnut.cnutUtf8.decode(bytes.bits)
-      cnut match {
-        case Attempt.Successful(DecodeResult(value, _)) =>
-          value.doc.renderTrim(0)
-        case Attempt.Failure(err) =>
-          "[error] " + err.toString
-      }
+      wasm.heapU8.slice(contentPtr, contentPtr + compiledLength)
     } else "[error] Compilation failed"
   }
 

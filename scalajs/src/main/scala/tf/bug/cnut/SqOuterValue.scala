@@ -1,7 +1,5 @@
 package tf.bug.cnut
 
-import org.typelevel.paiges.Doc
-
 enum SqOuterType extends java.lang.Enum[SqOuterType] {
   case Local
   case Symbol
@@ -14,10 +12,15 @@ case class SqOuterValue(
   name: SqObject
 ) {
 
-  def doc: Doc = Doc.text("SqOuterValue(") + Doc.intercalate(Doc.char(',') + Doc.space, Vector(
-    Doc.text("sqOuterType = ") + Doc.text(sqOuterType.toString),
-    Doc.text("src = ") + src.doc,
-    Doc.text("name = ") + name.doc
-  )) + Doc.char(')')
+  def renderInto(indent: Int, renderedCnut: MutableCnutRender): Unit = {
+    renderedCnut.fragment("OuterValue(")
+    renderedCnut.line()
+    renderedCnut.renderField("sqOuterType", 2 + indent, () => renderedCnut.fragment(sqOuterType.toString))
+    renderedCnut.renderField("src", 2 + indent, () => renderedCnut.fragment(src.show))
+    renderedCnut.renderFieldLast("name", 2 + indent, () => renderedCnut.fragment(name.show))
+    renderedCnut.line()
+    renderedCnut.space(indent)
+    renderedCnut.fragment(")")
+  }
 
 }

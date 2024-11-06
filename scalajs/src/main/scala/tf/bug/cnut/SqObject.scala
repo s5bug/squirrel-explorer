@@ -1,9 +1,7 @@
 package tf.bug.cnut
 
-import org.typelevel.paiges.Doc
-
 sealed abstract class SqObject {
-  def doc: Doc
+  def show: String
 }
 final case class SqString(value: String) extends SqObject {
   inline def escape(inline s: String): String =
@@ -12,14 +10,14 @@ final case class SqString(value: String) extends SqObject {
       .asInstanceOf[scalajs.js.Function1[scalajs.js.Any, String]]
       .apply(s)
 
-  override def doc: Doc = Doc.char('"') + Doc.text(escape(value)) + Doc.char('"')
+  override def show: String = "\"" ++ escape(value) ++ "\""
 }
 final case class SqInteger(value: Int) extends SqObject {
-  override def doc: Doc = Doc.text(value.toString)
+  override def show: String = value.toString
 }
 final case class SqFloat(value: Float) extends SqObject {
-  override def doc: Doc = Doc.text(value.toString) + Doc.char('f')
+  override def show: String = value.toString ++ "f"
 }
 case object SqNull extends SqObject {
-  override def doc: Doc = Doc.text("null")
+  override def show: String = "null"
 }

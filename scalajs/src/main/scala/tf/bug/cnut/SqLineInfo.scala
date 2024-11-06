@@ -1,15 +1,18 @@
 package tf.bug.cnut
 
-import org.typelevel.paiges.Doc
-
 case class SqLineInfo(
   line: Int,
   op: Int
 ) {
 
-  def doc: Doc = Doc.text("SqLineInfo(") + Doc.intercalate(Doc.char(',') + Doc.space, Vector(
-    Doc.text("line = ") + Doc.text(line.toString),
-    Doc.text("op = ") + Doc.text(op.toString)
-  )) + Doc.char(')')
+  def renderInto(indent: Int, renderedCnut: MutableCnutRender): Unit = {
+    renderedCnut.fragment("LineInfo(")
+    renderedCnut.line()
+    renderedCnut.renderField("line", 2 + indent, () => renderedCnut.fragment(line.toString))
+    renderedCnut.renderFieldLast("op", 2 + indent, () => renderedCnut.fragment(op.toString))
+    renderedCnut.line()
+    renderedCnut.space(indent)
+    renderedCnut.fragment(")")
+  }
 
 }

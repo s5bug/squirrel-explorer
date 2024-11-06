@@ -11,7 +11,7 @@ lazy val squirrelexplorer = project.in(file("."))
     Compile / scalaJSModuleInitializers ++= Seq(
       ModuleInitializer.mainMethodWithArgs("tf.bug.fe.SquirrelExplorer", "main").withModuleID("main"),
       ModuleInitializer.mainMethodWithArgs("tf.bug.worker.SquirrelCompilerWorker", "main").withModuleID("compilerworker"),
-      ModuleInitializer.mainMethodWithArgs("tf.bug.worker.SquirrelExplorerWorker", "main").withModuleID("explorerworker")
+      ModuleInitializer.mainMethodWithArgs("tf.bug.worker.SquirrelRendererWorker", "main").withModuleID("rendererworker")
     ),
 
       /* Configure Scala.js to emit modules in the optimal way to
@@ -35,11 +35,12 @@ lazy val squirrelexplorer = project.in(file("."))
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "org.typelevel" %%% "cats-core" % "2.12.0",
-      "org.typelevel" %%% "cats-effect" % "3.5.4",
+      "org.typelevel" %%% "cats-effect" % "3.5.5",
       "co.fs2" %%% "fs2-core" % "3.11.0",
       "com.armanbilge" %%% "calico" % "0.2.2",
       "org.scodec" %%% "scodec-core" % "2.3.2",
-      "org.typelevel" %%% "paiges-core" % "0.4.4",
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core" % "2.31.1",
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.31.1" % "compile-internal",
     ),
 
     externalNpm := {

@@ -37,6 +37,9 @@ export default defineConfig(({ command, mode }) => {
           return join(root, buildOutDir, /* don't join base, */ monacoWorkerPath)
         }
       })
-    ]
+    ],
+    worker: {
+      format: 'iife'
+    }
   }
 })
