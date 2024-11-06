@@ -107,7 +107,6 @@ object MonacoDiffEditor {
         Some(IO.delay(disposeCb.dispose()))
       }
       val setMarks = model.flatMap { m =>
-        scalajs.js.Dynamic.global.console.log("applying marks:", value.markers)
         IO {
           typings.monacoEditor.mod.editor.setModelMarkers(m.modified, "cnut", value.markers)
         }
