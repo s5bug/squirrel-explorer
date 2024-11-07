@@ -17,6 +17,7 @@ opaque type MonacoEditor = typings.monacoEditor.mod.editor.IStandaloneCodeEditor
 opaque type MonacoDiffEditor = typings.monacoEditor.mod.editor.IStandaloneDiffEditor
 opaque type MonacoModel = typings.monacoEditor.mod.editor.ITextModel
 opaque type MonacoDiffModel = typings.monacoEditor.mod.editor.IDiffEditorModel
+opaque type MonacoDiffEditorViewModel = typings.monacoEditor.mod.editor.IDiffEditorViewModel
 opaque type InlayHintsProvider = typings.monacoEditor.mod.languages.InlayHintsProvider
 
 object MonacoEditor {
@@ -81,38 +82,38 @@ object MonacoDiffEditor {
     )(ed => IO.delay(ed.dispose()))
   }
 
+  import MonacoDiffEditorViewModel.waitDiff
+  
   extension(editor: MonacoDiffEditor) {
-
-    def setOriginalResult(value: RenderResult, hints: Ref[IO, scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint]]): IO[Unit] = IO.async[Unit] { cb =>
-      val registerCallback = IO.delay {
-        val disposeCb: IDisposable = editor.onDidUpdateDiff(ev => {
-          cb(Right(()))
-        })
-        editor.getOriginalEditor().setValue(value.rawText)
-        Some(IO.delay(disposeCb.dispose()))
-      }
+    
+    def setOriginalResult(
+      viewModel: MonacoDiffEditorViewModel,
+      value: RenderResult,
+      hints: Ref[IO, scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint]]
+    ): IO[Unit] = {
+      val setValue = IO.delay { editor.getOriginalEditor().setValue(value.rawText) }
       val setMarks = model.flatMap { m =>
-        IO(typings.monacoEditor.mod.editor.setModelMarkers(m.original, "cnut", value.markers))
+        IO.delay {
+          typings.monacoEditor.mod.editor.setModelMarkers(m.original, "cnut", value.markers)
+        }
       }
       val setHints = hints.set(value.hints)
-      (setHints, registerCallback, setMarks).mapN((_, cleanup, _) => cleanup)
+      (setHints, setValue >> viewModel.waitDiff, setMarks).tupled.void
     }
 
-    def setModifiedResult(value: RenderResult, hints: Ref[IO, scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint]]): IO[Unit] = IO.async[Unit] { cb =>
-      val registerCallback = IO.delay {
-        val disposeCb: IDisposable = editor.onDidUpdateDiff(ev => {
-          cb(Right(()))
-        })
-        editor.getModifiedEditor().setValue(value.rawText)
-        Some(IO.delay(disposeCb.dispose()))
-      }
+    def setModifiedResult(
+      viewModel: MonacoDiffEditorViewModel,
+      value: RenderResult,
+      hints: Ref[IO, scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint]]
+    ): IO[Unit] = {
+      val setValue = IO.delay { editor.getModifiedEditor().setValue(value.rawText) }
       val setMarks = model.flatMap { m =>
-        IO {
+        IO.delay {
           typings.monacoEditor.mod.editor.setModelMarkers(m.modified, "cnut", value.markers)
         }
       }
       val setHints = hints.set(value.hints)
-      (setHints, registerCallback, setMarks).mapN((_, cleanup, _) => cleanup)
+      (setHints, setValue >> viewModel.waitDiff, setMarks).tupled.void
     }
 
     def model: IO[MonacoDiffModel] = IO.delay(editor.getModel().asInstanceOf[MonacoDiffModel])
@@ -169,6 +170,25 @@ object MonacoDiffModel {
     def modified: MonacoModel = model.modified
     def original: MonacoModel = model.original
 
+  }
+
+}
+
+object MonacoDiffEditorViewModel {
+
+  def of(diffEditor: MonacoDiffEditor): Resource[IO, MonacoDiffEditorViewModel] = {
+    val acquire: IO[MonacoDiffEditorViewModel] = IO.delay {
+      diffEditor.createViewModel(diffEditor.getModel().asInstanceOf)
+    }
+    val release: MonacoDiffEditorViewModel => IO[Unit] = vm => IO.delay(vm.dispose())
+    Resource.make(acquire)(release)
+  }
+
+  extension (vm: MonacoDiffEditorViewModel) {
+    def waitDiff: IO[Unit] =
+      IO.fromPromise(IO.delay {
+        vm.waitForDiff()
+      })
   }
 
 }

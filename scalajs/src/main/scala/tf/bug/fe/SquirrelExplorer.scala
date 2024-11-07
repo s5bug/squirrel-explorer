@@ -99,22 +99,24 @@ object SquirrelExplorer extends IOWebApp {
           (uploadedHints, compiledHints) =>
             Resource.eval(IO(typings.monacoEditor.mod.languages.register(typings.monacoEditor.mod.languages.ILanguageExtensionPoint("cnut")))) >>
             MonacoDiffEditor.create(container, "cnut", "cnut_diff").flatMap { editor =>
-              InlayHintsProvider.register("cnut") { (model, range, ct) =>
-                editor.model.flatMap { dm =>
-                  if (model.id == dm.original.id) {
-                    uploadedHints.get.map(r => typings.monacoEditor.mod.languages.InlayHintList(() => (), r))
-                  } else if (model.id == dm.modified.id) {
-                    compiledHints.get.map(r => typings.monacoEditor.mod.languages.InlayHintList(() => (), r))
-                  } else IO.raiseError(new RuntimeException("Unknown model with cnut language"))
+              MonacoDiffEditorViewModel.of(editor).flatMap { vm =>
+                InlayHintsProvider.register("cnut") { (model, range, ct) =>
+                  editor.model.flatMap { dm =>
+                    if (model.id == dm.original.id) {
+                      uploadedHints.get.map(r => typings.monacoEditor.mod.languages.InlayHintList(() => (), r))
+                    } else if (model.id == dm.modified.id) {
+                      compiledHints.get.map(r => typings.monacoEditor.mod.languages.InlayHintList(() => (), r))
+                    } else IO.raiseError(new RuntimeException("Unknown model with cnut language"))
+                  }
+                }.flatMap { _ =>
+                  val renderedDiscrete = uploadedResult.discrete.either(compiledResult.discrete).foreach {
+                    case Left(uploaded) =>
+                      editor.setOriginalResult(vm, uploaded, uploadedHints)
+                    case Right(compiled) =>
+                      editor.setModifiedResult(vm, compiled, compiledHints)
+                  }
+                  renderedDiscrete.compile.drain.background
                 }
-              }.flatMap { _ =>
-                val renderedDiscrete = uploadedResult.discrete.either(compiledResult.discrete).foreach {
-                  case Left(uploaded) =>
-                    editor.setOriginalResult(uploaded, uploadedHints)
-                  case Right(compiled) =>
-                    editor.setModifiedResult(compiled, compiledHints)
-                }
-                renderedDiscrete.compile.drain.background
               }
             }
         }
