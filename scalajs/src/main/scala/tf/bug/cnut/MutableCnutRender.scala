@@ -55,7 +55,6 @@ final class MutableCnutRender { self =>
       "severity" -> 2.0
     )
     this.markers.push(marker.asInstanceOf)
-    scalajs.js.Dynamic.global.console.log("rendering marks: ", this.markers)
   }
 
   def renderVector[A](
