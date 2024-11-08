@@ -102,11 +102,16 @@ object SquirrelExplorer extends IOWebApp {
               MonacoDiffEditorViewModel.of(editor).flatMap { vm =>
                 InlayHintsProvider.register("cnut") { (model, range, ct) =>
                   editor.model.flatMap { dm =>
-                    if (model.id == dm.original.id) {
-                      uploadedHints.get.map(r => typings.monacoEditor.mod.languages.InlayHintList(() => (), r))
-                    } else if (model.id == dm.modified.id) {
-                      compiledHints.get.map(r => typings.monacoEditor.mod.languages.InlayHintList(() => (), r))
-                    } else IO.raiseError(new RuntimeException("Unknown model with cnut language"))
+                    val hintArray =
+                      if (model.id == dm.original.id) {
+                        uploadedHints.get
+                      } else if (model.id == dm.modified.id) {
+                        compiledHints.get
+                      } else IO.raiseError(new RuntimeException("Unknown model with cnut language"))
+                    hintArray.map { arr =>
+                      val slice = binarySearchSlice(arr, range)
+                      typings.monacoEditor.mod.languages.InlayHintList(() => (), slice)
+                    }
                   }
                 }.flatMap { _ =>
                   val renderedDiscrete = uploadedResult.discrete.either(compiledResult.discrete).foreach {
@@ -122,6 +127,49 @@ object SquirrelExplorer extends IOWebApp {
         }
       }
     )
+  }
+
+  def binarySearchSlice(
+    arr: scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint],
+    range: typings.monacoEditor.mod.Range
+  ): scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint] = {
+    if(arr.length <= 2) return arr
+
+    val firstLessThanLine = range.startLineNumber
+    val firstGreaterThanLine = range.endLineNumber
+
+    // Do a binary search to find a lower transition point
+    var fltLo = -1
+    var fltHi = arr.length
+    while((1 + fltLo) < fltHi) {
+      val mid = fltLo + ((fltHi - fltLo) >> 1)
+
+      val elem = arr(mid)
+      // pred(elem) = is the elem after the first LT line
+      if(elem.position.lineNumber >= firstLessThanLine) {
+        fltHi = mid
+      } else {
+        fltLo = mid
+      }
+    }
+    val ixOfFirst = fltHi - 1
+    
+    var fgtLo = -1
+    var fgtHi = arr.length
+    while((1 + fgtLo) < fgtHi) {
+      val mid = fgtLo + ((fgtHi - fgtLo) >> 1)
+
+      val elem = arr(mid)
+      // pred(elem) = is the elem after the first GT line
+      if (elem.position.lineNumber > firstGreaterThanLine) {
+        fgtHi = mid
+      } else {
+        fgtLo = mid
+      }
+    }
+    val ixOfLast = fgtHi - 1
+    
+    arr.jsSlice(ixOfFirst.max(0), 1 + ixOfLast)
   }
 
 }
