@@ -116,7 +116,7 @@ final case class SqInstruction(
         if(op != null) renderInfo3(renderedCnut, op)
         else renderRaw(renderedCnut)
       case Closure =>
-        renderInfo1(renderedCnut, parent.literals(arg1).show)
+        renderInfo1(renderedCnut, parent.functions(arg1).name.show)
       case _ =>
         renderRaw(renderedCnut)
     }
