@@ -36,25 +36,19 @@ final class MutableCnutRender { self =>
     val start = this.column
     this.fragment(text)
     val end = this.column
-    
-    // We can't directly use this because MarkerSeverity.Info pulls an import to monaco-editor which messes with HMR
-    //    val marker = typings.monacoEditor.mod.editor.IMarkerData(
-    //      message = info,
-    //      startLineNumber = self.lineNumber,
-    //      endLineNumber = self.lineNumber,
-    //      startColumn = start,
-    //      endColumn = end,
-    //      severity = MarkerSeverity.Info
-    //    )
-    val marker = scalajs.js.Dictionary(
-      "message" -> info,
-      "startLineNumber" -> self.lineNumber,
-      "endLineNumber" -> self.lineNumber,
-      "startColumn" -> start,
-      "endColumn" -> end,
-      "severity" -> 2.0
+
+    val marker = typings.monacoEditor.mod.editor.IMarkerData(
+      message = info,
+      startLineNumber = self.lineNumber,
+      endLineNumber = self.lineNumber,
+      startColumn = start,
+      endColumn = end,
+      // we can't directly use MarkerSeverity.Info because the "monaco" import references DOM which pulls vite HMR into
+      // a web worker, which fails because web workers don't have DOM
+      // the `: Any` ascription is required to prevent scalac from assuming this cast fails
+      severity = (2.0: Any).asInstanceOf[typings.monacoEditor.mod.MarkerSeverity]
     )
-    this.markers.push(marker.asInstanceOf)
+    this.markers.push(marker)
   }
 
   def renderVector[A](
