@@ -45,8 +45,7 @@ final class MutableCnutRender { self =>
       endColumn = end,
       // we can't directly use MarkerSeverity.Info because the "monaco" import references DOM which pulls vite HMR into
       // a web worker, which fails because web workers don't have DOM
-      // the `: Any` ascription is required to prevent scalac from assuming this cast fails
-      severity = (2.0: Any).asInstanceOf[typings.monacoEditor.mod.MarkerSeverity]
+      severity = 2.asInstanceOf[typings.monacoEditor.mod.MarkerSeverity]
     )
     this.markers.push(marker)
   }
