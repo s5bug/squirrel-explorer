@@ -55,6 +55,8 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: sbt
+      - name: Setup SBT
+        uses: sbt/setup-sbt@v1
       - name: Build frontend
         run: pnpm run build
       - name: Setup Pages
