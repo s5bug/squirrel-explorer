@@ -15,14 +15,28 @@ object SquirrelRendererWorker {
   private var encodingSjis: Boolean = false
   
   def main(args: Array[String]): Unit = {
+    val accumulator: js.Array[String | Uint8Array] = js.Array()
     js.Dynamic.global.onmessage =
-      (e => onMessage(e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
+      (e => accumulator.push(e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
+
+    DragonboxApi.get.`then` { (dboxApi: DragonboxApi) =>
+      val render = new MutableCnutRender(dboxApi)
+
+      js.Dynamic.global.onmessage =
+        (e => onMessage(render, e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
+
+      var i = 0
+      while(i < accumulator.length) {
+        onMessage(render, accumulator(i))
+        i += 1
+      }
+    }
   }
 
   def returnMessage(content: String): Unit =
     js.Dynamic.global.postMessage(content)
   
-  def onMessage(cnutBytesOrCommandJson: String | Uint8Array): Unit = {
+  def onMessage(render: MutableCnutRender, cnutBytesOrCommandJson: String | Uint8Array): Unit = {
     cnutBytesOrCommandJson match {
       case commandStr: String =>
         val command = jsoniter_scala.core.readFromString[RenderCommand](commandStr)
@@ -38,12 +52,12 @@ object SquirrelRendererWorker {
         
         parsed match {
           case Attempt.Successful(DecodeResult(value, _)) =>
-            val renderer = new MutableCnutRender
-            value.renderInto(this.renderLineInfos, 0, renderer)
+            render.reset()
+            value.renderInto(this.renderLineInfos, 0, render)
             
-            returnMessage(renderer.rawText())
-            returnMessage(renderer.hintsJson())
-            returnMessage(renderer.markersJson())
+            returnMessage(render.rawText())
+            returnMessage(render.hintsJson())
+            returnMessage(render.markersJson())
           case Attempt.Failure(cause) => returnMessage(s"[error] $cause")
         }
     }

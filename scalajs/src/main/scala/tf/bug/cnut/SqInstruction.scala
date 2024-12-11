@@ -81,8 +81,7 @@ final case class SqInstruction(
       case Load =>
         renderInfo1(renderedCnut, parent.literals(arg1).show)
       case LoadFloat =>
-        val bitsToFloat = java.lang.Float.intBitsToFloat(arg1)
-        renderInfo1(renderedCnut, bitsToFloat.toString ++ "f")
+        renderInfoFloat1(renderedCnut, arg1)
       case DLoad =>
         renderInfo13(renderedCnut, parent.literals(arg1).show, parent.literals(arg3).show)
       case PrepCallK =>
@@ -140,6 +139,19 @@ final case class SqInstruction(
     renderedCnut.fragment(arg0.toString)
     renderedCnut.fragment(", ")
     renderedCnut.fragmentInfo(arg1.toString, info)
+    renderedCnut.fragment(", ")
+    renderedCnut.fragment(arg2.toString)
+    renderedCnut.fragment(", ")
+    renderedCnut.fragment(arg3.toString)
+    renderedCnut.fragment(")")
+  }
+
+  inline def renderInfoFloat1(inline renderedCnut: MutableCnutRender, inline infoBits: Int): Unit = {
+    renderedCnut.fragment(sqInstructionType.toString)
+    renderedCnut.fragment("(")
+    renderedCnut.fragment(arg0.toString)
+    renderedCnut.fragment(", ")
+    renderedCnut.fragmentInfoFloat(arg1.toString, infoBits)
     renderedCnut.fragment(", ")
     renderedCnut.fragment(arg2.toString)
     renderedCnut.fragment(", ")
