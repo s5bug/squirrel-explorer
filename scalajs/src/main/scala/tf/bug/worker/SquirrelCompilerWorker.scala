@@ -42,7 +42,9 @@ object SquirrelCompilerWorker {
     
     if (compiledLength != 0) {
       val contentPtr = wasm.outBufferContent(outBuf)
-      wasm.heapU8.slice(contentPtr, contentPtr + compiledLength)
+      wasm.heapU8.asInstanceOf[js.Dynamic]
+        .slice(contentPtr, contentPtr + compiledLength)
+        .asInstanceOf[Uint8Array]
     } else "[error] Compilation failed"
   }
 

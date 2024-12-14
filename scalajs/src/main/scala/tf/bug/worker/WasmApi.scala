@@ -4,7 +4,7 @@ import cats.effect.IO
 import scala.scalajs.js
 import scala.scalajs.js.Promise
 import scala.scalajs.js.annotation.{JSImport, JSName}
-import typings.std.Uint8Array
+import scala.scalajs.js.typedarray.Uint8Array
 
 @js.native
 trait WasmApi extends js.Object {
