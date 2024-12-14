@@ -1,0 +1,47 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Continuous Integration
+
+on:
+  # Runs on pushes targeting the default branch
+  pull_request:
+    branches: ['main']
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # Single deploy job since we're just deploying
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JAVA_OPTS: -Xms6G -Xmx6G -Xss4M
+      JVM_OPTS:  -Xms6G -Xmx6G -Xss4M
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up PNPM
+        uses: pnpm/action-setup@v4.0.0
+        with:
+          version: latest
+          run_install: false
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Set up Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+      - name: Build WASM module
+        run: emmake make -C wasm
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: sbt
+      - name: Setup SBT
+        uses: sbt/setup-sbt@v1
+      - name: Build frontend
+        run: pnpm run build
