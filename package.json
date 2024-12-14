@@ -17,6 +17,6 @@
   "dependencies": {
     "@types/js-string-escape": "^1.0.3",
     "js-string-escape": "^1.0.1",
-    "monaco-editor": "^0.52.0"
+    "monaco-editor": "^0.52.2"
   }
 }
