@@ -35,7 +35,7 @@ lazy val squirrelexplorer = project.in(file("."))
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "org.typelevel" %%% "cats-core" % "2.12.0",
-      "org.typelevel" %%% "cats-effect" % "3.5.5",
+      "org.typelevel" %%% "cats-effect" % "3.5.7",
       "co.fs2" %%% "fs2-core" % "3.11.0",
       "com.armanbilge" %%% "calico" % "0.2.3",
       "org.scodec" %%% "scodec-core" % "2.3.2",
