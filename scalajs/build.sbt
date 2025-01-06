@@ -4,7 +4,7 @@ import scala.sys.process.Process
 lazy val squirrelexplorer = project.in(file("."))
   .enablePlugins(ScalaJSPlugin, ScalablyTypedConverterExternalNpmPlugin)
   .settings(
-    scalaVersion := "3.5.2",
+    scalaVersion := "3.6.2",
 
     // We have two main methods, so we explicitly emit two modules:
     scalaJSUseMainModuleInitializer := false,
