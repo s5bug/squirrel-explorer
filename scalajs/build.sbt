@@ -1,8 +1,19 @@
 import org.scalajs.linker.interface.{ModuleInitializer, ModuleSplitStyle}
 import scala.sys.process.Process
+import scala.util.Try
+
+val isScalaSteward = sys.env.get("SCALA_STEWARD").exists { s =>
+  val t = s.trim
+  t.nonEmpty && Try(t.toInt).getOrElse(1) != 0
+}
+
+val stewardScalablyTyped =
+  if(isScalaSteward) Seq.empty
+  else Seq(ScalablyTypedConverterExternalNpmPlugin)
 
 lazy val squirrelexplorer = project.in(file("."))
-  .enablePlugins(ScalaJSPlugin, ScalablyTypedConverterExternalNpmPlugin)
+  .enablePlugins(ScalaJSPlugin)
+  .enablePlugins(stewardScalablyTyped*)
   .settings(
     scalaVersion := "3.6.2",
 
