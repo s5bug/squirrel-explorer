@@ -22,9 +22,10 @@ opaque type InlayHintsProvider = typings.monacoEditor.mod.languages.InlayHintsPr
 
 object MonacoEditor {
 
-  def create(container: fs2.dom.HtmlElement[IO], readOnly: Boolean = false): Resource[IO, MonacoEditor] = {
+  def create(container: fs2.dom.HtmlElement[IO], language: Option[String] = None, readOnly: Boolean = false): Resource[IO, MonacoEditor] = {
     val opts: IStandaloneEditorConstructionOptions = IStandaloneEditorConstructionOptions()
     opts.automaticLayout = true
+    opts.language = language.getOrElse(scalajs.js.undefined)
     opts.readOnly = readOnly
 
     Resource.make[IO, typings.monacoEditor.mod.editor.IStandaloneCodeEditor](

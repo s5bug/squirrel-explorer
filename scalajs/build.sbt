@@ -20,7 +20,7 @@ lazy val squirrelexplorer = project.in(file("."))
     // We have two main methods, so we explicitly emit two modules:
     scalaJSUseMainModuleInitializer := false,
     Compile / scalaJSModuleInitializers ++= Seq(
-      ModuleInitializer.mainMethodWithArgs("tf.bug.fe.SquirrelExplorer", "main").withModuleID("main"),
+      ModuleInitializer.mainMethodWithArgs("tf.bug.SquirrelExplorer", "main").withModuleID("main"),
       ModuleInitializer.mainMethodWithArgs("tf.bug.worker.SquirrelCompilerWorker", "main").withModuleID("compilerworker"),
       ModuleInitializer.mainMethodWithArgs("tf.bug.worker.SquirrelRendererWorker", "main").withModuleID("rendererworker")
     ),

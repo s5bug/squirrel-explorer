@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
-import { resolve, join } from 'path'
+import path from 'path'
 import scalaJS from '@scala-js/vite-plugin-scalajs'
 import monacoEditorPluginModule from 'vite-plugin-monaco-editor'
 
@@ -26,6 +26,11 @@ export default defineConfig(({ command, mode }) => {
   const monacoWorkerPath = "monacoeditorwork"
   return {
     base: basePath,
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src/"),
+      },
+    },
     plugins: [
       scalaJS({
         cwd: './scalajs'
@@ -34,7 +39,7 @@ export default defineConfig(({ command, mode }) => {
         languageWorkers: ['editorWorkerService'],
         publicPath: monacoWorkerPath,
         customDistPath: (root: string, buildOutDir: string, base: string) => {
-          return join(root, buildOutDir, /* don't join base, */ monacoWorkerPath)
+          return path.join(root, buildOutDir, /* don't join base, */ monacoWorkerPath)
         }
       })
     ],
