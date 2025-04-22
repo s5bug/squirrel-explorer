@@ -1,4 +1,4 @@
-import org.scalajs.linker.interface.{ModuleInitializer, ModuleSplitStyle}
+import org.scalajs.linker.interface.{ESVersion, ModuleInitializer, ModuleSplitStyle}
 import scala.sys.process.Process
 import scala.util.Try
 
@@ -33,7 +33,8 @@ lazy val squirrelexplorer = project.in(file("."))
        *   (in particular, for the standard library)
        */
     scalaJSLinkerConfig ~= {
-      _.withModuleKind(ModuleKind.ESModule)
+      _.withESFeatures(_.withESVersion(ESVersion.ES2020))
+        .withModuleKind(ModuleKind.ESModule)
         .withModuleSplitStyle(
           ModuleSplitStyle.SmallModulesFor(List("tf.bug")))
     },
