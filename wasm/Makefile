@@ -35,7 +35,7 @@ api.js api.wasm: api.c
 	$(CC) $(CCFLAGS) -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORTED_FUNCTIONS=_sq_open,_sq_close,_compile_and_serialize_buffer,_out_buffer_init,_out_buffer_close,_out_buffer_content,_free -s EXPORTED_RUNTIME_METHODS=stringToNewUTF8,lengthBytesUTF8,UTF8ToString,HEAPU8 -ISQUIRREL2/include -LSQUIRREL2/lib -lsquirrel api.c -o api.js
 
 dragonbox.js dragonbox.wasm: dragonbox.cpp
-	$(CXX) $(CXXFLAGS) -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORTED_FUNCTIONS=_realloc,_free,_bulk_dragonbox -s EXPORTED_RUNTIME_METHODS=HEAP32,HEAPU32 dragonbox.cpp -o dragonbox.js
+	$(CXX) $(CXXFLAGS) -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORTED_FUNCTIONS=_realloc,_free,_bulk_dragonbox -s EXPORTED_RUNTIME_METHODS=HEAP32,HEAPU32,HEAPF32 dragonbox.cpp -o dragonbox.js
 
 debug: CCFLAGS += $(DEBUG_CCFLAGS)
 debug: CXXFLAGS += $(DEBUG_CXXFLAGS)
