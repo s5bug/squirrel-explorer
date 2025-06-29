@@ -51,8 +51,8 @@ lazy val squirrelexplorer = project.in(file("."))
       "co.fs2" %%% "fs2-core" % "3.12.0",
       "com.armanbilge" %%% "calico" % "0.2.3",
       "org.scodec" %%% "scodec-core" % "2.3.2",
-      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core" % "2.36.5",
-      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.36.5" % "compile-internal",
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core" % "2.36.6",
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-macros" % "2.36.6" % "compile-internal",
     ),
 
     externalNpm := {
