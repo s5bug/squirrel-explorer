@@ -15,7 +15,7 @@ lazy val squirrelexplorer = project.in(file("."))
   .enablePlugins(ScalaJSPlugin)
   .enablePlugins(stewardScalablyTyped*)
   .settings(
-    scalaVersion := "3.7.1",
+    scalaVersion := "3.7.2",
 
     // We have two main methods, so we explicitly emit two modules:
     scalaJSUseMainModuleInitializer := false,
