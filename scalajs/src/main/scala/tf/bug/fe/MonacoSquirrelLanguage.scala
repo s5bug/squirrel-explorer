@@ -2,21 +2,19 @@ package tf.bug.fe
 
 import cats.*
 import cats.effect.*
-import typings.monacoEditor.mod as monaco
-import monaco.languages.{CommentRule, IAutoClosingPairConditional, IExpandedMonarchLanguageAction, IExpandedMonarchLanguageRule, ILanguageExtensionPoint, IMonarchLanguage, LanguageConfiguration}
 import org.scalablytyped.runtime.StringDictionary
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
-import typings.monacoEditor.mod.languages
+import typings.monacoEditor.esmVsEditorEditorDotapiMod as monaco
 
 object MonacoSquirrelLanguage {
   def registerId: IO[Unit] = IO.delay {
-    monaco.languages.register(ILanguageExtensionPoint(id = "squirrel"))
+    monaco.languages.register(monaco.languages.ILanguageExtensionPoint(id = "squirrel"))
   }
 
   @js.native
   @JSImport("@/squirrel_monarch.ts", JSImport.Default)
-  private val lang: IMonarchLanguage = js.native
+  private val lang: monaco.languages.IMonarchLanguage = js.native
 
   def registerTokenizer: IO[Unit] = {
     IO.delay {
@@ -25,13 +23,13 @@ object MonacoSquirrelLanguage {
   }
 
   def registerConfig: IO[Unit] = {
-    val conf = LanguageConfiguration()
+    val conf = monaco.languages.LanguageConfiguration()
     conf.setAutoClosingPairs(js.Array(
-      IAutoClosingPairConditional(open = "\"", close = "\""),
-      IAutoClosingPairConditional(open = "\'", close = "\'"),
-      IAutoClosingPairConditional(open = "(", close = ")"),
-      IAutoClosingPairConditional(open = "{", close = "}"),
-      IAutoClosingPairConditional(open = "[", close = "]"),
+      monaco.languages.IAutoClosingPairConditional(open = "\"", close = "\""),
+      monaco.languages.IAutoClosingPairConditional(open = "\'", close = "\'"),
+      monaco.languages.IAutoClosingPairConditional(open = "(", close = ")"),
+      monaco.languages.IAutoClosingPairConditional(open = "{", close = "}"),
+      monaco.languages.IAutoClosingPairConditional(open = "[", close = "]"),
     ))
     conf.setBrackets(js.Array(
       js.Tuple2("(", ")"),
@@ -39,7 +37,7 @@ object MonacoSquirrelLanguage {
       js.Tuple2("{", "}")
     ))
     conf.setComments(
-      CommentRule()
+      monaco.languages.CommentRule()
         .setLineComment("//")
         .setBlockComment(js.Tuple2("/*", "*/"))
     )

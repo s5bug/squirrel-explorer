@@ -1,9 +1,11 @@
 package tf.bug.fe
 
+import typings.monacoEditor.esmVsEditorEditorDotapiMod as monaco
+
 case class RenderResult(
   rawText: String,
-  hints: scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint],
-  markers: scalajs.js.Array[typings.monacoEditor.mod.editor.IMarkerData]
+  hints: scalajs.js.Array[monaco.languages.InlayHint],
+  markers: scalajs.js.Array[monaco.editor.IMarkerData]
 )
 
 object RenderResult {

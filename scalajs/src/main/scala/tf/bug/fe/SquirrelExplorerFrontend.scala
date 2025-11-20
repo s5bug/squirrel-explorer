@@ -9,6 +9,7 @@ import fs2.concurrent.SignallingRef
 import fs2.dom.*
 import org.scalajs.dom.FileReader
 import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
+import typings.monacoEditor.esmVsEditorEditorDotapiMod as monaco
 
 object SquirrelExplorerFrontend {
 
@@ -82,11 +83,11 @@ object SquirrelExplorerFrontend {
       )},
       div(idAttr := "right-editor").flatTap { container =>
         (
-          Resource.eval(Ref.of[IO, scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint]](scalajs.js.Array())),
-          Resource.eval(Ref.of[IO, scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint]](scalajs.js.Array())),
+          Resource.eval(Ref.of[IO, scalajs.js.Array[monaco.languages.InlayHint]](scalajs.js.Array())),
+          Resource.eval(Ref.of[IO, scalajs.js.Array[monaco.languages.InlayHint]](scalajs.js.Array())),
         ).parFlatMapN {
           (uploadedHints, compiledHints) =>
-            Resource.eval(IO(typings.monacoEditor.mod.languages.register(typings.monacoEditor.mod.languages.ILanguageExtensionPoint("cnut")))) >>
+            Resource.eval(IO(monaco.languages.register(monaco.languages.ILanguageExtensionPoint("cnut")))) >>
             MonacoDiffEditor.create(container, "cnut", "cnut_diff").flatMap { editor =>
               MonacoDiffEditorViewModel.of(editor).flatMap { vm =>
                 InlayHintsProvider.register("cnut") { (model, range, ct) =>
@@ -99,7 +100,7 @@ object SquirrelExplorerFrontend {
                       } else IO.raiseError(new RuntimeException("Unknown model with cnut language"))
                     hintArray.map { arr =>
                       val slice = SquirrelExplorerFrontend.binarySearchSlice(arr, range)
-                      typings.monacoEditor.mod.languages.InlayHintList(() => (), slice)
+                      monaco.languages.InlayHintList(() => (), slice)
                     }
                   }
                 }.flatMap { _ =>
@@ -119,9 +120,9 @@ object SquirrelExplorerFrontend {
   }
 
   def binarySearchSlice(
-    arr: scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint],
-    range: typings.monacoEditor.mod.Range
-  ): scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint] = {
+    arr: scalajs.js.Array[monaco.languages.InlayHint],
+    range: monaco.Range
+  ): scalajs.js.Array[monaco.languages.InlayHint] = {
     if (arr.length <= 2) return arr
 
     val firstLessThanLine = range.startLineNumber

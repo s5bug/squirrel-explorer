@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.Int32Array
 import tf.bug.worker.DragonboxApi
+import typings.monacoEditor.esmVsEditorEditorDotapiMod as monaco
 
 final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
 
@@ -11,8 +12,8 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
   private var column: Int = 1
 
   private val fragments: scalajs.js.Array[String] = scalajs.js.Array()
-  private val hints: scalajs.js.Array[typings.monacoEditor.mod.languages.InlayHint] = scalajs.js.Array()
-  private val markers: scalajs.js.Array[typings.monacoEditor.mod.editor.IMarkerData] = scalajs.js.Array()
+  private val hints: scalajs.js.Array[monaco.languages.InlayHint] = scalajs.js.Array()
+  private val markers: scalajs.js.Array[monaco.editor.IMarkerData] = scalajs.js.Array()
   private val floatMarkerData: scalajs.js.Array[MutableCnutRender.FloatMarker] = scalajs.js.Array()
   private var floatMarkerBitsOffset: Int = dboxApi.realloc(0, 1024)
   private var floatMarkersBitsCapacity: Int = 1024
@@ -65,7 +66,7 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
     this.fragment(text)
     val end = this.column
 
-    val marker = typings.monacoEditor.mod.editor.IMarkerData(
+    val marker = monaco.editor.IMarkerData(
       message = info,
       startLineNumber = self.lineNumber,
       endLineNumber = self.lineNumber,
@@ -73,7 +74,7 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
       endColumn = end,
       // we can't directly use MarkerSeverity.Info because the "monaco" import references DOM which pulls vite HMR into
       // a web worker, which fails because web workers don't have DOM
-      severity = 2.asInstanceOf[typings.monacoEditor.mod.MarkerSeverity]
+      severity = 2.asInstanceOf[monaco.MarkerSeverity]
     )
     this.markers.push(marker)
   }
@@ -176,8 +177,8 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
   }
 
   def indexHint(idx: String): Unit = {
-    val p = typings.monacoEditor.mod.IPosition(self.column, self.lineNumber)
-    val h = typings.monacoEditor.mod.languages.InlayHint(idx, p)
+    val p = monaco.IPosition(self.column, self.lineNumber)
+    val h = monaco.languages.InlayHint(idx, p)
     h.paddingRight = true
     this.hints.push(h)
   }
@@ -218,7 +219,7 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
       }
 
       val fakeMarker = floatMarkerData(i)
-      val realMarker = typings.monacoEditor.mod.editor.IMarkerData(
+      val realMarker = monaco.editor.IMarkerData(
         message = asPreciseDouble.toString ++ "f",
         startLineNumber = fakeMarker.lineNo,
         endLineNumber = fakeMarker.lineNo,
@@ -226,7 +227,7 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
         endColumn = fakeMarker.end,
         // we can't directly use MarkerSeverity.Info because the "monaco" import references DOM which pulls vite HMR into
         // a web worker, which fails because web workers don't have DOM
-        severity = 2.asInstanceOf[typings.monacoEditor.mod.MarkerSeverity]
+        severity = 2.asInstanceOf[monaco.MarkerSeverity]
       )
       this.markers.push(realMarker)
 
