@@ -41,7 +41,7 @@ lazy val squirrelexplorer = project.in(file("."))
 
     scalacOptions ++= Seq(
       "-no-indent",
-      "-old-syntax"
+      "-new-syntax"
     ),
 
     libraryDependencies ++= Seq(

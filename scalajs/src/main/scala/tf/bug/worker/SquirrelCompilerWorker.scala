@@ -24,7 +24,7 @@ object SquirrelCompilerWorker {
       js.Dynamic.global.onmessage =
         (e => returnMessage(onMessage(wasm, vm, emptyString, outBuf, e.data.asInstanceOf[String]))): js.Function1[MessageEvent, Unit]
 
-      if(accumulator.nonEmpty) {
+      if accumulator.nonEmpty then {
         val recent = accumulator.last
         returnMessage(onMessage(wasm, vm, emptyString, outBuf, recent))
       }
@@ -40,7 +40,7 @@ object SquirrelCompilerWorker {
     val compiledLength = wasm.compileAndSerializeBuffer(vm, allocateContent, contentLength, sourceName, outBuf)
     wasm.free(allocateContent)
     
-    if (compiledLength != 0) {
+    if compiledLength != 0 then {
       val contentPtr = wasm.outBufferContent(outBuf)
       wasm.heapU8.asInstanceOf[js.Dynamic]
         .slice(contentPtr, contentPtr + compiledLength)

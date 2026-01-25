@@ -100,7 +100,7 @@ final case class SqInstruction(
           case 6 => ">>>"
           case _ => null
         }
-        if(op != null) renderInfo3(renderedCnut, op)
+        if op != null then renderInfo3(renderedCnut, op)
         else renderRaw(renderedCnut)
       case CompArith | CompArithL =>
         renderInfo3(renderedCnut, arg3.toChar.toString)
@@ -112,7 +112,7 @@ final case class SqInstruction(
           case 4 => "<="
           case _ => null
         }
-        if(op != null) renderInfo3(renderedCnut, op)
+        if op != null then renderInfo3(renderedCnut, op)
         else renderRaw(renderedCnut)
       case Closure =>
         renderInfo1(renderedCnut, parent.functions(arg1).name.show)

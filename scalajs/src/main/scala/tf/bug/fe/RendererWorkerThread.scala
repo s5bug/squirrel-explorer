@@ -57,10 +57,10 @@ object RendererWorkerThread {
           val stuff: js.Array[String] = js.Array()
           internal.onmessage = e => e.data match {
             case s: String =>
-              if(s.startsWith("[error] ")) cb(Right(Left(s.substring(8))))
+              if s.startsWith("[error] ") then cb(Right(Left(s.substring(8))))
               else {
                 stuff.push(s)
-                if(stuff.length >= 3) {
+                if stuff.length >= 3 then {
                   cb(Right(Right(
                     RenderResult(
                       stuff(0),

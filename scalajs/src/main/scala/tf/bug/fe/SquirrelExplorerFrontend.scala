@@ -69,7 +69,7 @@ object SquirrelExplorerFrontend {
         onChange --> (_.foreach { ev =>
           val files = IO.delay(self.asInstanceOf[org.scalajs.dom.HTMLInputElement].files)
           files.flatMap { fl =>
-            if(fl.length < 1) IO.unit
+            if fl.length < 1 then IO.unit
             else {
               SquirrelExplorerFrontend.readFile(fl.item(0)).flatMap { buf =>
                 rwk.tryToRender(buf).flatMap {
@@ -93,9 +93,9 @@ object SquirrelExplorerFrontend {
                 InlayHintsProvider.register("cnut") { (model, range, ct) =>
                   editor.model.flatMap { dm =>
                     val hintArray =
-                      if (model.id == dm.original.id) {
+                      if model.id == dm.original.id then {
                         uploadedHints.get
-                      } else if (model.id == dm.modified.id) {
+                      } else if model.id == dm.modified.id then {
                         compiledHints.get
                       } else IO.raiseError(new RuntimeException("Unknown model with cnut language"))
                     hintArray.map { arr =>
@@ -123,7 +123,7 @@ object SquirrelExplorerFrontend {
     arr: scalajs.js.Array[monaco.languages.InlayHint],
     range: monaco.Range
   ): scalajs.js.Array[monaco.languages.InlayHint] = {
-    if (arr.length <= 2) return arr
+    if arr.length <= 2 then return arr
 
     val firstLessThanLine = range.startLineNumber
     val firstGreaterThanLine = range.endLineNumber
@@ -131,12 +131,12 @@ object SquirrelExplorerFrontend {
     // Do a binary search to find a lower transition point
     var fltLo = -1
     var fltHi = arr.length
-    while ((1 + fltLo) < fltHi) {
+    while (1 + fltLo) < fltHi do {
       val mid = fltLo + ((fltHi - fltLo) >> 1)
 
       val elem = arr(mid)
       // pred(elem) = is the elem after the first LT line
-      if (elem.position.lineNumber >= firstLessThanLine) {
+      if elem.position.lineNumber >= firstLessThanLine then {
         fltHi = mid
       } else {
         fltLo = mid
@@ -146,12 +146,12 @@ object SquirrelExplorerFrontend {
 
     var fgtLo = -1
     var fgtHi = arr.length
-    while ((1 + fgtLo) < fgtHi) {
+    while (1 + fgtLo) < fgtHi do {
       val mid = fgtLo + ((fgtHi - fgtLo) >> 1)
 
       val elem = arr(mid)
       // pred(elem) = is the elem after the first GT line
-      if (elem.position.lineNumber > firstGreaterThanLine) {
+      if elem.position.lineNumber > firstGreaterThanLine then {
         fgtHi = mid
       } else {
         fgtLo = mid

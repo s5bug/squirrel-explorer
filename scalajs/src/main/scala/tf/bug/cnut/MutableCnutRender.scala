@@ -28,7 +28,7 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
   }
 
   private inline def ensureFloatsBitsSpace(): Unit = {
-    if((4 * (1 + floatMarkerData.length)) >= floatMarkersBitsCapacity) {
+    if (4 * (1 + floatMarkerData.length)) >= floatMarkersBitsCapacity then {
       floatMarkersBitsCapacity <<= 1
       floatMarkerBitsOffset = dboxApi.realloc(floatMarkerBitsOffset, floatMarkersBitsCapacity)
     }
@@ -48,7 +48,7 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
   }
 
   @tailrec def space(length: Int): Unit = {
-    if(length > 256) {
+    if length > 256 then {
       this.fragment(MutableCnutRender.twoFiveSixSpaces)
       space(length - 256)
     } else {
@@ -102,7 +102,7 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
 
     var idx = 0
     val iter = vector.iterator
-    while (iter.hasNext) {
+    while iter.hasNext do {
       this.space(2 + indent)
 
       val idxStr = idx.toString
@@ -196,14 +196,14 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
     val i32idx = wasmIntArray >> 2
 
     var i = 0
-    while(i < floatMarkerData.length) {
+    while i < floatMarkerData.length do {
       val significandAddress = i32idx + (i * 3)
       val exponentAddress = significandAddress + 1
       val negativeAddress = exponentAddress + 1
 
       val significandU32: Double = dboxApi.heapU32.get(significandAddress)
 
-      val asPreciseDouble: Double = if(significandU32 != 0) {
+      val asPreciseDouble: Double = if significandU32 != 0 then {
         val exponentI32: Int = dboxApi.heapI32.get(exponentAddress)
         val negativeB: Int = dboxApi.heapI32.get(negativeAddress)
 

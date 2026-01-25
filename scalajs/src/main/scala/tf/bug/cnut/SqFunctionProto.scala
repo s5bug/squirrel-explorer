@@ -25,7 +25,7 @@ case class SqFunctionProto(
     renderedCnut.renderVectorField("parameters", 2 + indent, parameters, p => renderedCnut.fragment(p.show))
     renderedCnut.renderVectorField("outerValues", 2 + indent, outerValues, _.renderInto(4 + indent, renderedCnut))
     renderedCnut.renderVectorField("localVarInfos", 2 + indent, localVarInfos, _.renderInto(4 + indent, renderedCnut))
-    if(renderLineInfos) {
+    if renderLineInfos then {
       renderedCnut.renderVectorField("lineInfos", 2 + indent, lineInfos, _.renderInto(4 + indent, renderedCnut))
     }
     renderedCnut.renderVectorField("defaultParams", 2 + indent, defaultParams, i => renderedCnut.fragment(i.toString))

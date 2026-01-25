@@ -26,7 +26,7 @@ object SquirrelRendererWorker {
         (e => onMessage(render, e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
 
       var i = 0
-      while(i < accumulator.length) {
+      while i < accumulator.length do {
         onMessage(render, accumulator(i))
         i += 1
       }
@@ -47,7 +47,7 @@ object SquirrelRendererWorker {
       case cnutBytes: Uint8Array =>
         val bv = ByteVector.fromUint8Array(cnutBytes)
         val parsed =
-          if(this.encodingSjis) Cnut.cnutSjis.decode(bv.bits)
+          if this.encodingSjis then Cnut.cnutSjis.decode(bv.bits)
           else Cnut.cnutUtf8.decode(bv.bits)
         
         parsed match {
