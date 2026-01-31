@@ -57,7 +57,7 @@ trait WasmApi extends js.Object {
 object WasmApi {
 
   @js.native
-  @JSImport("/wasm/api.js", JSImport.Default)
+  @JSImport("/wasm/build/api.js", JSImport.Default)
   private val wasmModule: js.Function1[js.Dictionary[js.Dynamic], js.Promise[WasmApi]] = js.native
 
   def get: Promise[WasmApi] =

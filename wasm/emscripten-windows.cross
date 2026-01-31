@@ -1,0 +1,14 @@
+[binaries]
+c = 'emcc.bat'
+cpp = 'em++.bat'
+ar = 'emar.bat'
+strip = 'emstrip.bat'
+
+[properties]
+needs_exe_wrapper = true
+
+[host_machine]
+system = 'emscripten'
+cpu_family = 'wasm32'
+cpu = 'wasm32'
+endian = 'little'

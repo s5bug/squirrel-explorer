@@ -1,7 +1,8 @@
-import { defineConfig, loadEnv } from 'vite'
+import {defineConfig, loadEnv, PluginOption} from 'vite'
 import path from 'path'
 import scalaJS from '@scala-js/vite-plugin-scalajs'
 import monacoEditorPluginModule from 'vite-plugin-monaco-editor'
+import {execSync} from "node:child_process";
 
 const isObjectWithDefaultFunction = (module: unknown): module is { default: typeof monacoEditorPluginModule } => (
   module != null &&
@@ -13,6 +14,29 @@ const isObjectWithDefaultFunction = (module: unknown): module is { default: type
 const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
   ? monacoEditorPluginModule.default
   : monacoEditorPluginModule
+
+const mesonBuildWasmPlugin: () => PluginOption = () => {
+  return {
+    name: 'meson-build-wasm',
+    buildStart() {
+      const buildDir = "build"
+
+      let crossfile = "emscripten.cross";
+      if(process.platform == "win32") crossfile = "emscripten-windows.cross";
+
+      let buildtype = "-Dbuildtype=debug";
+      if(process.env.NODE_ENV == "production") buildtype = "-Dbuildtype=release";
+
+      execSync(
+        `emmake meson setup ${buildDir} --cross-file .\\${crossfile} --reconfigure ${buildtype}`,
+        {cwd: "wasm"}
+      )
+      execSync(
+        `emmake meson compile -vC ${buildDir}`, {cwd: "wasm"}
+      )
+    }
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -32,6 +56,7 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     plugins: [
+      mesonBuildWasmPlugin(),
       scalaJS({
         cwd: './scalajs'
       }),

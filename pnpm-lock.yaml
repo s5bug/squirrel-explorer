@@ -20,13 +20,16 @@ importers:
     devDependencies:
       '@scala-js/vite-plugin-scalajs':
         specifier: 1.1.0
-        version: 1.1.0
+        version: 1.1.0(@types/node@25.1.0)
+      '@types/node':
+        specifier: ^25.1.0
+        version: 25.1.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
       vite:
         specifier: ^7.3.1
-        version: 7.3.1
+        version: 7.3.1(@types/node@25.1.0)
       vite-plugin-monaco-editor:
         specifier: ^1.1.0
         version: 1.1.0(monaco-editor@0.55.1)
@@ -323,6 +326,9 @@ packages:
   '@types/js-string-escape@1.0.3':
     resolution: {integrity: sha512-D3SEAdmrWQTAVR3fQVc/idOCSqXINe8JoRAW3k6pOVgCO74aPs5KJql8sDxXlo2DNE+u0N2pnqFQL8VR9hGd6w==}
 
+  '@types/node@25.1.0':
+    resolution: {integrity: sha512-t7frlewr6+cbx+9Ohpl0NOTKXZNV9xHRmNOvql47BFJKcEG1CxtxlPEEe+gR9uhVWM4DwhnvTF110mIL4yP9RA==}
+
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
@@ -393,6 +399,9 @@ packages:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
     hasBin: true
+
+  undici-types@7.16.0:
+    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
   vite-plugin-monaco-editor@1.1.0:
     resolution: {integrity: sha512-IvtUqZotrRoVqwT0PBBDIZPNraya3BxN/bfcNfnxZ5rkJiGcNtO5eAOWWSgT7zullIAEqQwxMU83yL9J5k7gww==}
@@ -594,9 +603,9 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.55.1':
     optional: true
 
-  '@scala-js/vite-plugin-scalajs@1.1.0':
+  '@scala-js/vite-plugin-scalajs@1.1.0(@types/node@25.1.0)':
     dependencies:
-      vite: 7.3.1
+      vite: 7.3.1(@types/node@25.1.0)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -613,6 +622,10 @@ snapshots:
   '@types/estree@1.0.8': {}
 
   '@types/js-string-escape@1.0.3': {}
+
+  '@types/node@25.1.0':
+    dependencies:
+      undici-types: 7.16.0
 
   '@types/trusted-types@2.0.7':
     optional: true
@@ -718,11 +731,13 @@ snapshots:
 
   typescript@5.9.3: {}
 
+  undici-types@7.16.0: {}
+
   vite-plugin-monaco-editor@1.1.0(monaco-editor@0.55.1):
     dependencies:
       monaco-editor: 0.55.1
 
-  vite@7.3.1:
+  vite@7.3.1(@types/node@25.1.0):
     dependencies:
       esbuild: 0.27.2
       fdir: 6.5.0(picomatch@4.0.3)
@@ -731,4 +746,5 @@ snapshots:
       rollup: 4.55.1
       tinyglobby: 0.2.15
     optionalDependencies:
+      '@types/node': 25.1.0
       fsevents: 2.3.3

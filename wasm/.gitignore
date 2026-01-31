@@ -79,3 +79,5 @@ dkms.conf
 
 *.js
 *.wasm
+
+/build/
