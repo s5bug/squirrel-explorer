@@ -29,12 +29,16 @@ jobs:
         with:
           node-version: latest
           cache: 'pnpm'
-      - name: Install dependencies
-        run: pnpm install
       - name: Set up Emscripten
         uses: mymindstorm/setup-emsdk@v14
-      - name: Build WASM module
-        run: emmake make -C wasm
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install Meson
+        run: python -m pip install meson ninja
+      - name: Install dependencies
+        run: pnpm install
       - name: Setup Java
         uses: actions/setup-java@v5
         with:

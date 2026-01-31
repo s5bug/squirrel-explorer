@@ -28,7 +28,7 @@ const mesonBuildWasmPlugin: () => PluginOption = () => {
       if(process.env.NODE_ENV == "production") buildtype = "-Dbuildtype=release";
 
       execSync(
-        `emmake meson setup ${buildDir} --cross-file .\\${crossfile} --reconfigure ${buildtype}`,
+        `emmake meson setup ${buildDir} --cross-file ./${crossfile} --reconfigure ${buildtype}`,
         {cwd: "wasm"}
       )
       execSync(
