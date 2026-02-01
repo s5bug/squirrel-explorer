@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite dev",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean": "rimraf -G dist && rimraf -G wasm/build && cd scalajs && sbt clean"
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "1.1.0",
     "@types/node": "^25.1.0",
+    "rimraf": "^6.1.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-monaco-editor": "^1.1.0"
