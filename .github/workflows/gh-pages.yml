@@ -34,7 +34,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Cache Maven artifacts
-        uses: coursier/cache-action@v7
+        uses: coursier/cache-action@v8
         with:
           root: scalajs
       - name: Set up PNPM
