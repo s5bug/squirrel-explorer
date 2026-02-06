@@ -1,19 +1,8 @@
 import {defineConfig, loadEnv, PluginOption} from 'vite'
-import path from 'path'
+import path from 'node:path'
+import {lezer} from '@lezer/generator/rollup'
 import scalaJS from '@scala-js/vite-plugin-scalajs'
-import monacoEditorPluginModule from 'vite-plugin-monaco-editor'
-import {execSync} from "node:child_process";
-
-const isObjectWithDefaultFunction = (module: unknown): module is { default: typeof monacoEditorPluginModule } => (
-  module != null &&
-  typeof module === 'object' &&
-  'default' in module &&
-  typeof module.default === 'function'
-)
-
-const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
-  ? monacoEditorPluginModule.default
-  : monacoEditorPluginModule
+import {execSync} from 'node:child_process'
 
 const mesonBuildWasmPlugin: () => PluginOption = () => {
   return {
@@ -39,7 +28,7 @@ const mesonBuildWasmPlugin: () => PluginOption = () => {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   let basePath;
   if(env["GITHUB_ACTIONS"] === "true") {
@@ -47,7 +36,6 @@ export default defineConfig(({ command, mode }) => {
   } else {
     basePath = "/"
   }
-  const monacoWorkerPath = "monacoeditorwork"
   return {
     base: basePath,
     resolve: {
@@ -57,16 +45,10 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       mesonBuildWasmPlugin(),
+      lezer(),
       scalaJS({
         cwd: './scalajs'
       }),
-      monacoEditorPlugin({
-        languageWorkers: ['editorWorkerService'],
-        publicPath: monacoWorkerPath,
-        customDistPath: (root: string, buildOutDir: string, base: string) => {
-          return path.join(root, buildOutDir, /* don't join base, */ monacoWorkerPath)
-        }
-      })
     ],
     worker: {
       format: 'iife'

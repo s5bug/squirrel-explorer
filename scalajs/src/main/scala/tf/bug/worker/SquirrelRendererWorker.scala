@@ -56,8 +56,8 @@ object SquirrelRendererWorker {
             value.renderInto(this.renderLineInfos, 0, render)
             
             returnMessage(render.rawText())
-            returnMessage(render.hintsJson())
-            returnMessage(render.markersJson())
+//            returnMessage(render.hintsJson())
+//            returnMessage(render.markersJson())
           case Attempt.Failure(cause) => returnMessage(s"[error] $cause")
         }
     }

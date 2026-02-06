@@ -1,7 +1,7 @@
-import monaco from "monaco-editor";
-import IMonarchLanguage = monaco.languages.IMonarchLanguage;
+import {parser} from './squirrel_lezer.grammar';
 
-const squirrelLanguage: IMonarchLanguage = {
+const squirrelLanguage = {
+  parser: parser,
   defaultToken: 'invalid',
   tokenPostfix: '.nut',
 

@@ -60,12 +60,11 @@ object RendererWorkerThread {
               if s.startsWith("[error] ") then cb(Right(Left(s.substring(8))))
               else {
                 stuff.push(s)
-                if stuff.length >= 3 then {
+                // TODO fix this
+                if stuff.length >= 1 then {
                   cb(Right(Right(
                     RenderResult(
-                      stuff(0),
-                      js.JSON.parse(stuff(1)).asInstanceOf,
-                      js.JSON.parse(stuff(2)).asInstanceOf
+                      stuff(0)
                     )
                   )))
                 }
