@@ -1,5 +1,6 @@
 package tf.bug.cnut
 
+import narr.*
 import scala.annotation.tailrec
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.Int32Array
@@ -85,29 +86,27 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
     pushFloatBits(floatMarkerData, infoBits)
   }
 
-  def renderVector[A](
+  def renderArray[A](
     indent: Int,
-    vector: Vector[A],
+    array: NArray[A],
     renderElem: A => Unit
   ): Unit = {
-    this.fragment("Vector(")
+    this.fragment("[")
     this.line()
 
-    val maxIdx = vector.length
+    val maxIdx = array.length
     val maxIdxStr = maxIdx.toString
     val maxIdxLen = maxIdxStr.length
 
     var idx = 0
-    val iter = vector.iterator
-    while iter.hasNext do {
+    while idx < array.length do {
       this.space(2 + indent)
 
 //      val idxStr = idx.toString
 //      val spaceStr = MutableCnutRender.twoFiveSixSpaces.substring(256 - (maxIdxLen - idxStr.length))
 //      this.indexHint(spaceStr ++ idxStr)
 
-      val next = iter.next()
-      renderElem(next)
+      renderElem(array(idx))
 
       this.fragment(",")
       this.line()
@@ -116,7 +115,7 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
     }
 
     this.space(indent)
-    this.fragment(")")
+    this.fragment("]")
   }
 
   inline def renderField[A](
@@ -164,13 +163,13 @@ final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
     renderF()
   }
 
-  inline def renderVectorField[A](
+  inline def renderArrayField[A](
     inline name: String,
     inline indent: Int,
-    inline vec: Vector[A],
+    inline arr: NArray[A],
     inline renderElem: A => Unit
   ): Unit = {
-    this.renderField[A](name, indent, () => this.renderVector(indent, vec, renderElem))
+    this.renderField[A](name, indent, () => this.renderArray(indent, arr, renderElem))
   }
 
 //  def indexHint(idx: String): Unit = {

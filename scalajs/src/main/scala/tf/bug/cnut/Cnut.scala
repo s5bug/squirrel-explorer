@@ -1,8 +1,10 @@
 package tf.bug.cnut
 
 import java.nio.charset.{Charset, StandardCharsets}
+import narr.*
+import narr.native.NativeArrayBuilder
 import scodec.*
-import scodec.bits.ByteVector
+import scodec.bits.{BitVector, ByteVector}
 import scodec.codecs.*
 
 object Cnut {
@@ -47,24 +49,80 @@ object Cnut {
     (arg1, it, arg0, arg2, arg3) => SqInstruction(it, arg0, arg1, arg2, arg3),
     { case SqInstruction(it, arg0, arg1, arg2, arg3) => (arg1, it, arg0, arg2, arg3) }
   )
+  
+  final class NArrayCodec[A](private val count: Codec[Int], private val elem: Codec[A], private val initialBuilder: (count: Int) => NArrayBuilder[A]) extends Codec[NArray[A]] {
+    override def decode(bits: BitVector): Attempt[DecodeResult[NArray[A]]] = count.decode(bits).match {
+      case Attempt.Successful(DecodeResult(value, remainder)) =>
+        val builder = initialBuilder(value)
+        
+        var left = value
+        var rem = remainder
+        while left > 0 do {
+          elem.decode(rem) match {
+            case Attempt.Successful(DecodeResult(nv, nr)) =>
+              builder.addOne(nv)
+              rem = nr
+            case other => return other.asInstanceOf
+          }
+          
+          left = left - 1
+        }
+        
+        Attempt.Successful(DecodeResult(builder.result, rem))
+      case other => other.asInstanceOf
+    }
+
+    override def encode(value: NArray[A]): Attempt[BitVector] =
+      count.encode(value.length) match {
+        case Attempt.Successful(bv) =>
+          val bvs: Array[BitVector] = new Array(1 + value.length)
+          bvs(0) = bv
+          
+          var i = 0
+          while i < value.length do {
+            elem.encode(value(i)) match {
+              case Attempt.Successful(ebv) =>
+                bvs(1 + i) = ebv
+              case other => return other
+            }
+            i = i + 1
+          }
+          
+          Attempt.Successful(BitVector.concat(bvs))
+        case other => other
+      }
+
+    override def sizeBound: SizeBound = SizeBound.unknown
+  }
+  
+  private inline def narrOfN[A](count: Codec[Int], element: Codec[A]): Codec[NArray[A]] =
+    inline compiletime.erasedValue[A] match {
+      case _: Byte => (new NArrayCodec[Byte](count, element.asInstanceOf, ByteArrayBuilder(_))).asInstanceOf
+      case _: Short => (new NArrayCodec[Short](count, element.asInstanceOf, ShortArrayBuilder(_))).asInstanceOf
+      case _: Int => (new NArrayCodec[Int](count, element.asInstanceOf, IntArrayBuilder(_))).asInstanceOf
+      case _: Float => (new NArrayCodec[Float](count, element.asInstanceOf, FloatArrayBuilder(_))).asInstanceOf
+      case _: Double => (new NArrayCodec[Double](count, element.asInstanceOf, DoubleArrayBuilder(_))).asInstanceOf
+      case _ => (new NArrayCodec[AnyRef](count, element.asInstanceOf, NativeArrayBuilder[AnyRef](_))).asInstanceOf
+    }
 
   private def sqFunctionProtoCounteds(encObj: Codec[SqObject], functionProtoCodec: Codec[SqFunctionProto]): Codec[
-    (Vector[SqObject], Vector[SqObject], Vector[SqOuterValue], Vector[SqLocalVarInfo],
-      Vector[SqLineInfo], Vector[Int], Vector[SqInstruction], Vector[SqFunctionProto])
+    (NArray[SqObject], NArray[SqObject], NArray[SqOuterValue], NArray[SqLocalVarInfo],
+      NArray[SqLineInfo], NArray[Int], NArray[SqInstruction], NArray[SqFunctionProto])
   ] =
     (int32L :: int32L :: int32L :: int32L :: int32L :: int32L :: int32L :: int32L).consume {
       case (nLiterals, nParameters, nOuterValues, nLocalVarInfos, nLineInfos, nDefaultParams, nInstructions, nFunctions) =>
-        val lits = sqClosureStreamPart ~> vectorOfN(provide(nLiterals), encObj)
-        val params = sqClosureStreamPart ~> vectorOfN(provide(nParameters), encObj)
-        val outerVals = sqClosureStreamPart ~> vectorOfN(provide(nOuterValues), sqOuterValue(encObj))
-        val localVars = sqClosureStreamPart ~> vectorOfN(provide(nLocalVarInfos), sqLocalVarInfo(encObj))
-        val lineInfos = sqClosureStreamPart ~> vectorOfN(provide(nLineInfos), sqLineInfo)
-        val defaultParams = sqClosureStreamPart ~> vectorOfN(provide(nDefaultParams), int32L)
-        val instructions = sqClosureStreamPart ~> vectorOfN(provide(nInstructions), sqInstruction)
-        val functions = sqClosureStreamPart ~> vectorOfN(provide(nFunctions), functionProtoCodec)
+        val lits = sqClosureStreamPart ~> narrOfN(provide(nLiterals), encObj)
+        val params = sqClosureStreamPart ~> narrOfN(provide(nParameters), encObj)
+        val outerVals = sqClosureStreamPart ~> narrOfN(provide(nOuterValues), sqOuterValue(encObj))
+        val localVars = sqClosureStreamPart ~> narrOfN(provide(nLocalVarInfos), sqLocalVarInfo(encObj))
+        val lineInfos = sqClosureStreamPart ~> narrOfN(provide(nLineInfos), sqLineInfo)
+        val defaultParams = sqClosureStreamPart ~> narrOfN(provide(nDefaultParams), int32L)
+        val instructions = sqClosureStreamPart ~> narrOfN(provide(nInstructions), sqInstruction)
+        val functions = sqClosureStreamPart ~> narrOfN(provide(nFunctions), functionProtoCodec)
         lits :: params :: outerVals :: localVars :: lineInfos :: defaultParams :: instructions :: functions
-    } { vecs =>
-      vecs.map[[X] =>> Int]([t] => (v: t) => v.asInstanceOf[Vector[?]].size).asInstanceOf[(Int, Int, Int, Int, Int, Int, Int, Int)]
+    } {
+      case (aLits, aParams, aOuterVals, aLocalVars, aLineInfos, aDefaultParams, aInstructions, aFunctions) =>
+        (aLits.length, aParams.length, aOuterVals.length, aLocalVars.length, aLineInfos.length, aDefaultParams.length, aInstructions.length, aFunctions.length)
     }
 
   def sqFunctionProto(stringCodec: Codec[String]): Codec[SqFunctionProto] = {
