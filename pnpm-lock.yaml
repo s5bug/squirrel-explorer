@@ -20,10 +20,10 @@ importers:
     devDependencies:
       '@scala-js/vite-plugin-scalajs':
         specifier: 1.1.0
-        version: 1.1.0(@types/node@25.2.0)
+        version: 1.1.0(@types/node@25.2.1)
       '@types/node':
-        specifier: ^25.2.0
-        version: 25.2.0
+        specifier: ^25.2.1
+        version: 25.2.1
       rimraf:
         specifier: ^6.1.2
         version: 6.1.2
@@ -32,7 +32,7 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^7.3.1
-        version: 7.3.1(@types/node@25.2.0)
+        version: 7.3.1(@types/node@25.2.1)
       vite-plugin-monaco-editor:
         specifier: ^1.1.0
         version: 1.1.0(monaco-editor@0.55.1)
@@ -337,8 +337,8 @@ packages:
   '@types/js-string-escape@1.0.3':
     resolution: {integrity: sha512-D3SEAdmrWQTAVR3fQVc/idOCSqXINe8JoRAW3k6pOVgCO74aPs5KJql8sDxXlo2DNE+u0N2pnqFQL8VR9hGd6w==}
 
-  '@types/node@25.2.0':
-    resolution: {integrity: sha512-DZ8VwRFUNzuqJ5khrvwMXHmvPe+zGayJhr2CDNiKB1WBE1ST8Djl00D0IC4vvNmHMdj6DlbYRIaFE7WHjlDl5w==}
+  '@types/node@25.2.1':
+    resolution: {integrity: sha512-CPrnr8voK8vC6eEtyRzvMpgp3VyVRhgclonE7qYi6P9sXwYb59ucfrnmFBTaP0yUi8Gk4yZg/LlTJULGxvTNsg==}
 
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
@@ -648,9 +648,9 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.57.1':
     optional: true
 
-  '@scala-js/vite-plugin-scalajs@1.1.0(@types/node@25.2.0)':
+  '@scala-js/vite-plugin-scalajs@1.1.0(@types/node@25.2.1)':
     dependencies:
-      vite: 7.3.1(@types/node@25.2.0)
+      vite: 7.3.1(@types/node@25.2.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -668,7 +668,7 @@ snapshots:
 
   '@types/js-string-escape@1.0.3': {}
 
-  '@types/node@25.2.0':
+  '@types/node@25.2.1':
     dependencies:
       undici-types: 7.16.0
 
@@ -808,7 +808,7 @@ snapshots:
     dependencies:
       monaco-editor: 0.55.1
 
-  vite@7.3.1(@types/node@25.2.0):
+  vite@7.3.1(@types/node@25.2.1):
     dependencies:
       esbuild: 0.27.2
       fdir: 6.5.0(picomatch@4.0.3)
@@ -817,5 +817,5 @@ snapshots:
       rollup: 4.57.1
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 25.2.0
+      '@types/node': 25.2.1
       fsevents: 2.3.3
