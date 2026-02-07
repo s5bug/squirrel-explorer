@@ -31,7 +31,7 @@ importers:
         version: 1.4.8
       '@replit/codemirror-minimap':
         specifier: ^0.5.2
-        version: 0.5.2(@codemirror/language@6.12.1)(@codemirror/lint@6.9.3)(@codemirror/state@6.5.4)(@codemirror/view@6.39.12)(@lezer/common@1.5.1)(@lezer/highlight@1.2.3)
+        version: 0.5.2(@codemirror/language@6.12.1)(@codemirror/lint@6.9.3)(@codemirror/state@6.5.4)(@codemirror/view@6.39.13)(@lezer/common@1.5.1)(@lezer/highlight@1.2.3)
       '@types/js-string-escape':
         specifier: ^1.0.3
         version: 1.0.3
@@ -711,12 +711,12 @@ snapshots:
 
   '@marijn/find-cluster-break@1.0.2': {}
 
-  '@replit/codemirror-minimap@0.5.2(@codemirror/language@6.12.1)(@codemirror/lint@6.9.3)(@codemirror/state@6.5.4)(@codemirror/view@6.39.12)(@lezer/common@1.5.1)(@lezer/highlight@1.2.3)':
+  '@replit/codemirror-minimap@0.5.2(@codemirror/language@6.12.1)(@codemirror/lint@6.9.3)(@codemirror/state@6.5.4)(@codemirror/view@6.39.13)(@lezer/common@1.5.1)(@lezer/highlight@1.2.3)':
     dependencies:
       '@codemirror/language': 6.12.1
       '@codemirror/lint': 6.9.3
       '@codemirror/state': 6.5.4
-      '@codemirror/view': 6.39.12
+      '@codemirror/view': 6.39.13
       '@lezer/common': 1.5.1
       '@lezer/highlight': 1.2.3
       crelt: 1.0.6
