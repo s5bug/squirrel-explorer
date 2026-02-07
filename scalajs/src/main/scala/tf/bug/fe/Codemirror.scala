@@ -19,6 +19,17 @@ import codemirrorState.Facet
 object Codemirror {
   inline def basicSetup: Extension = codemirror.basicSetup
   inline def minimalSetup: Extension = codemirror.minimalSetup
+
+  // TODO maybe replace the minimap so this sucks less
+  final case class MinimapConfig(create: CodemirrorView => IO[fs2.dom.HtmlElement[IO]])
+  def minimap(dispatcher: Dispatcher[IO])(of: MinimapConfig): Extension = typings.replitCodemirrorMinimap.mod.showMinimap.of {
+    typings.replitCodemirrorMinimap.mod.MinimapConfig { (ev: codemirrorView.EditorView) =>
+      of.create(ev.asInstanceOf).syncStep(Int.MaxValue).unsafeRunSync() match {
+        case Left(io) => throw new IllegalArgumentException("could not create minimap element synchronously")
+        case Right(elem) => typings.replitCodemirrorMinimap.anon.Dom(elem.asInstanceOf)
+      }
+    }
+  }
 }
 
 type CodemirrorStateConfig = codemirrorState.EditorStateConfig

@@ -43,11 +43,10 @@ object SquirrelExplorerFrontend {
       idAttr := "left-editor",
       CodemirrorView(CodemirrorViewConfig().setExtensionsVarargs(
         Codemirror.basicSetup,
+        Codemirror.minimap(dispatch)(Codemirror.MinimapConfig(_ => div(()).allocated.map(_._1))),
         LezerSquirrelLanguage.squirrel,
         CodemirrorView.updateListener(dispatch) { vu =>
           IO.whenA(vu.docChanged) {
-            println(typings.codemirrorLanguage.mod.syntaxTree(vu.state).toString())
-            
             compileAndRenderLeftContent(vu.state.doc.toString, cwk, rwk).flatMap {
               case None => IO.unit
               case Some(rr) => compiledResult.set(rr)
