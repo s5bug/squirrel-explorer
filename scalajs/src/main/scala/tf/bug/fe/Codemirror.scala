@@ -3,7 +3,7 @@ package tf.bug.fe
 import cats.data.State
 import cats.effect.kernel.Concurrent
 import cats.effect.std.{Dispatcher, Queue}
-import cats.effect.{IO, Ref, Resource}
+import cats.effect.{IO, Ref, Resource, SyncIO}
 import cats.syntax.all.*
 import fs2.*
 import fs2.concurrent.{Channel, SignallingRef}
@@ -12,7 +12,6 @@ import typings.codemirror.mod as codemirror
 import typings.codemirrorMerge.mod as codemirrorMerge
 import typings.codemirrorState.mod as codemirrorState
 import typings.codemirrorView.mod as codemirrorView
-
 import codemirrorState.Extension
 import codemirrorState.Facet
 
@@ -21,13 +20,11 @@ object Codemirror {
   inline def minimalSetup: Extension = codemirror.minimalSetup
 
   // TODO maybe replace the minimap so this sucks less
-  final case class MinimapConfig(create: CodemirrorView => IO[fs2.dom.HtmlElement[IO]])
+  final case class MinimapConfig(create: CodemirrorView => SyncIO[fs2.dom.HtmlElement[IO]])
   def minimap(dispatcher: Dispatcher[IO])(of: MinimapConfig): Extension = typings.replitCodemirrorMinimap.mod.showMinimap.of {
     typings.replitCodemirrorMinimap.mod.MinimapConfig { (ev: codemirrorView.EditorView) =>
-      of.create(ev.asInstanceOf).syncStep(Int.MaxValue).unsafeRunSync() match {
-        case Left(io) => throw new IllegalArgumentException("could not create minimap element synchronously")
-        case Right(elem) => typings.replitCodemirrorMinimap.anon.Dom(elem.asInstanceOf)
-      }
+      val elem = of.create(ev.asInstanceOf).unsafeRunSync()
+      typings.replitCodemirrorMinimap.anon.Dom(elem.asInstanceOf)
     }
   }
 }

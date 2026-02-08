@@ -3,7 +3,7 @@ package tf.bug.fe
 import calico.*
 import calico.html.io.{*, given}
 import cats.effect.std.Dispatcher
-import cats.effect.{IO, Ref, Resource}
+import cats.effect.{IO, Ref, Resource, SyncIO}
 import cats.syntax.all.*
 import fs2.*
 import fs2.concurrent.SignallingRef
@@ -43,7 +43,7 @@ object SquirrelExplorerFrontend {
       idAttr := "left-editor",
       CodemirrorView(CodemirrorViewConfig().setExtensionsVarargs(
         Codemirror.basicSetup,
-        Codemirror.minimap(dispatch)(Codemirror.MinimapConfig(_ => div(()).allocated.map(_._1))),
+        Codemirror.minimap(dispatch)(Codemirror.MinimapConfig(_ => SyncIO { org.scalajs.dom.document.createElement("div").asInstanceOf })),
         LezerSquirrelLanguage.squirrel,
         CodemirrorView.updateListener(dispatch) { vu =>
           IO.whenA(vu.docChanged) {
