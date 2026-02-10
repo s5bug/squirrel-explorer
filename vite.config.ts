@@ -19,7 +19,7 @@ const mesonBuildWasmPlugin: () => PluginOption = () => {
   return {
     name: 'meson-build-wasm',
     buildStart() {
-      const buildDir = "build"
+      const buildDir = "buildDir"
 
       let crossfile = "emscripten.cross";
       if(process.platform == "win32") crossfile = "emscripten-windows.cross";

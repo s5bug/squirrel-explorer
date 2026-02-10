@@ -38,7 +38,7 @@ trait DragonboxApi extends js.Object {
 object DragonboxApi {
 
   @js.native
-  @JSImport("/wasm/build/dragonbox.js", JSImport.Default)
+  @JSImport("/wasm/buildDir/dragonbox.js", JSImport.Default)
   private val wasmModule: js.Function1[js.Dictionary[js.Dynamic], js.Promise[DragonboxApi]] = js.native
 
   def get: Promise[DragonboxApi] =

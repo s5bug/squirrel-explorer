@@ -7,7 +7,7 @@
     "dev": "vite dev",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "clean": "rimraf -G dist && rimraf -G wasm/build && cd scalajs && sbt clean"
+    "clean": "rimraf -G dist && rimraf -G wasm/buildDir && cd scalajs && sbt clean"
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "1.1.0",
