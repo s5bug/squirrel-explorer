@@ -5,6 +5,7 @@ import org.scalablytyped.runtime.StringDictionary
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import tf.bug.cnut.SqInstructionType
+import tf.bug.worker.DragonboxApi
 import typings.lezerLr.mod as lezerLr
 import typings.codemirrorLanguage.mod as codemirrorLanguage
 import typings.codemirrorLint.mod as codemirrorLint
@@ -66,7 +67,8 @@ object LezerCnutLanguage {
     literals: NArray[LezerObject],
     myIndex: Int,
     instruction: LezerInstruction,
-    diagnostics: js.Array[codemirrorLint.Diagnostic]
+    diagnostics: js.Array[codemirrorLint.Diagnostic],
+    floatDiagnosticBuilder: FloatDiagnosticBuilder,
   )(using render: LezerRender): Unit = for {
     it <- instruction.instructionType.map(_.value)
     a0Node <- instruction.a0
@@ -82,19 +84,35 @@ object LezerCnutLanguage {
         val literal = literals(a1)
         val literalValue = literal.text
 
-        name.foreach(n => diagnostics.push(makeInfoDiagnostic(a0Node.from, a0Node.to, n)))
+        name.foreach(n => diagnostics.push(makeInfoDiagnostic(a0Node.from, a0Node.to, n.substring(1, n.length - 1))))
         diagnostics.push(makeInfoDiagnostic(a1Node.from, a1Node.to, literalValue))
-        scalajs.js.Dynamic.global.console.log(diagnostics)
+      case SqInstructionType.LoadInt =>
+        val toStackSpot = localAtSpotForOp(locals, a0, myIndex)
+        val name = toStackSpot.flatMap(_.name).map(_.text)
+
+        name.foreach(n => diagnostics.push(makeInfoDiagnostic(a0Node.from, a0Node.to, n.substring(1, n.length - 1))))
+      case SqInstructionType.LoadFloat =>
+        val toStackSpot = localAtSpotForOp(locals, a0, myIndex)
+        val name = toStackSpot.flatMap(_.name).map(_.text)
+
+        val floatBits = a1
+
+        name.foreach(n => diagnostics.push(makeInfoDiagnostic(a0Node.from, a0Node.to, n.substring(1, n.length - 1))))
+        floatDiagnosticBuilder.addFloatDiagnostic(a1Node.from, a1Node.to, floatBits)
       case _ => ()
     }
   }
 
-  val cnutLinter: Extension = codemirrorLint.linter(view => {
+  // maybe we opaque this to make it able to be IO
+  def cnutLinter(dbox: DragonboxApi): Extension = codemirrorLint.linter(view => {
     given nodeText: LezerRender = LezerRender.of(node => {
       view.state.doc.sliceString(node.from, node.to)
     })
 
+    codemirrorLanguage.forceParsing(view, view.state.doc.length)
+
     val diagnostics: js.Array[codemirrorLint.Diagnostic] = js.Array()
+    val floatDiagnosticBuilder: FloatDiagnosticBuilder = FloatDiagnosticBuilder.of(dbox)
     codemirrorLanguage.syntaxTree(view.state).cursor().iterate(node => {
       if node.name == "FunctionProto" then {
         val lezerFunction = LezerFunctionProto.of(node.node)
@@ -108,13 +126,14 @@ object LezerCnutLanguage {
           while i < instructions.length do {
             val instruction = instructions(i)
 
-            diagnosticForInstruction(lezerFunction, localVarInfos, literals, i, instruction, diagnostics)
+            diagnosticForInstruction(lezerFunction, localVarInfos, literals, i, instruction, diagnostics, floatDiagnosticBuilder)
 
             i += 1
           }
         }
       }
     })
+    floatDiagnosticBuilder.buildAndClean(diagnostics)
     diagnostics
   })
 }

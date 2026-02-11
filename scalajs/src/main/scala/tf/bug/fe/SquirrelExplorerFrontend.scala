@@ -10,6 +10,7 @@ import fs2.concurrent.SignallingRef
 import fs2.dom.*
 import org.scalajs.dom.FileReader
 import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
+import tf.bug.worker.DragonboxApi
 
 object SquirrelExplorerFrontend {
 
@@ -80,56 +81,60 @@ object SquirrelExplorerFrontend {
     compiledResult: SignallingRef[IO, RenderResult],
     uploadedResult: SignallingRef[IO, RenderResult]
   ): Resource[IO, HtmlElement[IO]] = Dispatcher.sequential(true).flatMap { dispatch =>
-    div(
-      idAttr := "right-panel",
-      input.withSelf { self => (
-        `type` := "file",
-        onChange --> (_.foreach { ev =>
-          val files = IO.delay(self.asInstanceOf[org.scalajs.dom.HTMLInputElement].files)
-          files.flatMap { fl =>
-            if fl.length < 1 then IO.unit
-            else {
-              SquirrelExplorerFrontend.readFile(fl.item(0)).flatMap { buf =>
-                rwk.tryToRender(buf).flatMap {
-                  case Left(_) => IO.unit
-                  case Right(rr) => uploadedResult.set(rr)
+    Resource.eval(IO.fromPromise(IO.delay(DragonboxApi.get))).flatMap { dragonbox =>
+      div(
+        idAttr := "right-panel",
+        input.withSelf { self =>
+          (
+            `type` := "file",
+            onChange --> (_.foreach { ev =>
+              val files = IO.delay(self.asInstanceOf[org.scalajs.dom.HTMLInputElement].files)
+              files.flatMap { fl =>
+                if fl.length < 1 then IO.unit
+                else {
+                  SquirrelExplorerFrontend.readFile(fl.item(0)).flatMap { buf =>
+                    rwk.tryToRender(buf).flatMap {
+                      case Left(_) => IO.unit
+                      case Right(rr) => uploadedResult.set(rr)
+                    }
+                  }
                 }
               }
+            })
+          )
+        },
+        div(
+          idAttr := "right-editor",
+          CodemirrorMergeView(
+            CodemirrorStateConfig()
+              .setExtensionsVarargs(
+                Codemirror.minimalSetup,
+                CodemirrorView.lineNumbers,
+                CodemirrorState.readOnly.of(true),
+                CodemirrorView.editable.of(false),
+                LezerCnutLanguage.cnut,
+                LezerCnutLanguage.cnutLinter(dragonbox),
+              ),
+            CodemirrorStateConfig()
+              .setExtensionsVarargs(
+                Codemirror.minimalSetup,
+                CodemirrorView.lineNumbers,
+                CodemirrorState.readOnly.of(true),
+                CodemirrorView.editable.of(false),
+                LezerCnutLanguage.cnut,
+                LezerCnutLanguage.cnutLinter(dragonbox),
+              )
+          ).flatTap { mv =>
+            val renderUploadedToA = uploadedResult.discrete.foreach { rr =>
+              replaceView(mv.a, rr.rawText)
             }
-          }
-        })
-      )},
-      div(
-        idAttr := "right-editor",
-        CodemirrorMergeView(
-          CodemirrorStateConfig()
-            .setExtensionsVarargs(
-              Codemirror.minimalSetup,
-              CodemirrorView.lineNumbers,
-              CodemirrorState.readOnly.of(true),
-              CodemirrorView.editable.of(false),
-              LezerCnutLanguage.cnut,
-              LezerCnutLanguage.cnutLinter,
-            ),
-          CodemirrorStateConfig()
-            .setExtensionsVarargs(
-              Codemirror.minimalSetup,
-              CodemirrorView.lineNumbers,
-              CodemirrorState.readOnly.of(true),
-              CodemirrorView.editable.of(false),
-              LezerCnutLanguage.cnut,
-              LezerCnutLanguage.cnutLinter,
-            )
-        ).flatTap { mv =>
-          val renderUploadedToA = uploadedResult.discrete.foreach { rr =>
-            replaceView(mv.a, rr.rawText)
-          }
-          val renderCompiledToB = (Stream.eval(compiledResult.get) ++ compiledResult.discrete).foreach { rr =>
-            replaceView(mv.b, rr.rawText)
-          }
-          (renderUploadedToA.merge(renderCompiledToB)).compile.drain.background
-        }.map(_.dom)
+            val renderCompiledToB = (Stream.eval(compiledResult.get) ++ compiledResult.discrete).foreach { rr =>
+              replaceView(mv.b, rr.rawText)
+            }
+            (renderUploadedToA.merge(renderCompiledToB)).compile.drain.background
+          }.map(_.dom)
+        )
       )
-    )
+    }
   }
 }
