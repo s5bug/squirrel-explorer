@@ -109,6 +109,7 @@ object SquirrelExplorerFrontend {
               CodemirrorState.readOnly.of(true),
               CodemirrorView.editable.of(false),
               LezerCnutLanguage.cnut,
+              LezerCnutLanguage.cnutLinter,
             ),
           CodemirrorStateConfig()
             .setExtensionsVarargs(
@@ -117,6 +118,7 @@ object SquirrelExplorerFrontend {
               CodemirrorState.readOnly.of(true),
               CodemirrorView.editable.of(false),
               LezerCnutLanguage.cnut,
+              LezerCnutLanguage.cnutLinter,
             )
         ).flatTap { mv =>
           val renderUploadedToA = uploadedResult.discrete.foreach { rr =>

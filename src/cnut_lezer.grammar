@@ -9,19 +9,67 @@ Closure {
 
 FunctionProto {
   "FunctionProto("
-  "sourceName" "=" Object ","
-  "name" "=" Object ","
-  "literals" "=" Array<Object> ","
-  "parameters" "=" Array<Object> ","
-  "outerValues" "=" Array<OuterValue> ","
-  "localVarInfos" "=" Array<LocalVarInfo> ","
-  "defaultParams" "=" Array<Integer> ","
-  "instructions" "=" Array<Instruction> ","
-  "functions" "=" Array<FunctionProto> ","
-  "stackSize" "=" Integer ","
-  "bgenerator" "=" Integer ","
-  "varparams" "=" Integer
+  FunctionSourceName ","
+  FunctionName ","
+  FunctionLiterals ","
+  FunctionParameters ","
+  FunctionOuterValues ","
+  FunctionLocalVarInfos ","
+  FunctionDefaultParams ","
+  FunctionInstructions ","
+  FunctionFunctions ","
+  FunctionStackSize ","
+  FunctionBgenerator ","
+  FunctionVarparams
   ")"
+}
+
+FunctionSourceName {
+  "sourceName" "=" Object
+}
+
+FunctionName {
+  "name" "=" Object
+}
+
+FunctionLiterals {
+  "literals" "=" Array<Object>
+}
+
+FunctionParameters {
+  "parameters" "=" Array<Object>
+}
+
+FunctionOuterValues {
+  "outerValues" "=" Array<OuterValue>
+}
+
+FunctionLocalVarInfos {
+  "localVarInfos" "=" Array<LocalVarInfo>
+}
+
+FunctionDefaultParams {
+  "defaultParams" "=" Array<Integer>
+}
+
+FunctionInstructions {
+  "instructions" "=" Array<Instruction>
+}
+
+FunctionFunctions {
+  "functions" "=" Array<FunctionProto>
+}
+
+FunctionStackSize {
+  "stackSize" "=" Integer
+}
+
+FunctionBgenerator {
+  "bgenerator" "=" Integer
+}
+
+FunctionVarparams {
+  "varparams" "=" Integer
 }
 
 OuterValue {
