@@ -39,18 +39,15 @@ object SquirrelExplorerFrontend {
   }
 
   def leftEditor(cwk: CompilerWorkerThread, rwk: RendererWorkerThread, compiledResult: SignallingRef[IO, RenderResult]): Resource[IO, HtmlElement[IO]] = Dispatcher.sequential(true).flatMap { dispatch =>
-    div(
+    Resource.eval(compileAndRenderLeftContent("", cwk, rwk).flatMap(_.traverse_(compiledResult.set))) >> div(
       idAttr := "left-editor",
       CodemirrorView(CodemirrorViewConfig().setExtensionsVarargs(
         Codemirror.basicSetup,
-        Codemirror.minimap(dispatch)(Codemirror.MinimapConfig(_ => SyncIO { org.scalajs.dom.document.createElement("div").asInstanceOf })),
+        Codemirror.minimap(dispatch)(Codemirror.MinimapConfig(_ => SyncIO { org.scalajs.dom.document.createElement("div").asInstanceOf[fs2.dom.HtmlElement[IO]] })),
         LezerSquirrelLanguage.squirrel,
         CodemirrorView.updateListener(dispatch) { vu =>
           IO.whenA(vu.docChanged) {
-            compileAndRenderLeftContent(vu.state.doc.toString, cwk, rwk).flatMap {
-              case None => IO.unit
-              case Some(rr) => compiledResult.set(rr)
-            }
+            compileAndRenderLeftContent(vu.state.doc.toString, cwk, rwk).flatMap(_.traverse_(compiledResult.set))
           }
         }
       )).map(_.dom)
