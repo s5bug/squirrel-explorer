@@ -79,7 +79,7 @@ object SquirrelExplorerFrontend {
     rwk: RendererWorkerThread,
     compiledResult: SignallingRef[IO, RenderResult],
     uploadedResult: SignallingRef[IO, RenderResult]
-  ): Resource[IO, HtmlElement[IO]] = {
+  ): Resource[IO, HtmlElement[IO]] = Dispatcher.sequential(true).flatMap { dispatch =>
     div(
       idAttr := "right-panel",
       input.withSelf { self => (
@@ -108,6 +108,7 @@ object SquirrelExplorerFrontend {
               CodemirrorView.lineNumbers,
               CodemirrorState.readOnly.of(true),
               CodemirrorView.editable.of(false),
+              LezerCnutLanguage.cnut,
             ),
           CodemirrorStateConfig()
             .setExtensionsVarargs(
@@ -115,6 +116,7 @@ object SquirrelExplorerFrontend {
               CodemirrorView.lineNumbers,
               CodemirrorState.readOnly.of(true),
               CodemirrorView.editable.of(false),
+              LezerCnutLanguage.cnut,
             )
         ).flatTap { mv =>
           val renderUploadedToA = uploadedResult.discrete.foreach { rr =>

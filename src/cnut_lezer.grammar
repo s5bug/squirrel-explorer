@@ -1,0 +1,151 @@
+@top File { Closure }
+
+Closure {
+  "Closure("
+  "sizeOfSqChar" "=" Integer ","
+  "funcProto" "=" FunctionProto
+  ")"
+}
+
+FunctionProto {
+  "FunctionProto("
+  "sourceName" "=" Object ","
+  "name" "=" Object ","
+  "literals" "=" Array<Object> ","
+  "parameters" "=" Array<Object> ","
+  "outerValues" "=" Array<OuterValue> ","
+  "localVarInfos" "=" Array<LocalVarInfo> ","
+  "defaultParams" "=" Array<Integer> ","
+  "instructions" "=" Array<Instruction> ","
+  "functions" "=" Array<FunctionProto> ","
+  "stackSize" "=" Integer ","
+  "bgenerator" "=" Integer ","
+  "varparams" "=" Integer
+  ")"
+}
+
+OuterValue {
+  "OuterValue("
+  "sqOuterType" "=" OuterType ","
+  "src" "=" Object ","
+  "name" "=" Object
+  ")"
+}
+
+LocalVarInfo {
+  "LocalVarInfo("
+  "name" "=" Object ","
+  "pos" "=" Integer ","
+  "startOp" "=" Integer ","
+  "endOp" "=" Integer
+  ")"
+}
+
+Instruction {
+  InstructionType "("
+  Integer "," Integer "," Integer "," Integer
+  ")"
+}
+
+Object {
+  String |
+  Integer |
+  Float
+}
+
+Array<Rule> {
+  "[" (Rule ",")* "]"
+}
+
+@skip {} {
+  String[isolate] {
+    '"' (stringContent | Escape)* '"'
+  }
+}
+
+@skip { whitespace }
+
+@tokens {
+  whitespace[@export] { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff\r\n\u2028\u2029]+ }
+
+  hex { @digit | $[a-fA-F] }
+  Escape {
+    "\\" ($[tabnrvf"'0] | "\\" | "x" hex hex)
+  }
+
+  stringContent { ![\\\n"]+ }
+
+  Float {
+    "-"? @digit+ "." @digit* ($[eE] $[-+]? @digit+)?
+  }
+
+  Integer { "-"? @digit+ }
+
+  @precedence { Float, Integer }
+
+  OuterType { "Local" | "Symbol" | "Outer" }
+
+  InstructionType {
+    "Line" |
+    "Load" |
+    "LoadInt" |
+    "LoadFloat" |
+    "DLoad" |
+    "TailCall" |
+    "Call" |
+    "PrepCall" |
+    "PrepCallK" |
+    "GetK" |
+    "Move" |
+    "NewSlot" |
+    "Delete" |
+    "Set" |
+    "Get" |
+    "Eq" |
+    "Ne" |
+    "Arith" |
+    "Bitw" |
+    "Return" |
+    "LoadNulls" |
+    "LoadRootTable" |
+    "LoadBool" |
+    "DMove" |
+    "Jmp" |
+    "Jnz" |
+    "Jz" |
+    "LoadFreeVar" |
+    "VArgC" |
+    "GetVArgV" |
+    "NewTable" |
+    "NewArray" |
+    "AppendArray" |
+    "GetParent" |
+    "CompArith" |
+    "CompArithL" |
+    "Inc" |
+    "IncL" |
+    "PInc" |
+    "PIncL" |
+    "Cmp" |
+    "Exists" |
+    "InstanceOf" |
+    "And" |
+    "Or" |
+    "Neg" |
+    "Not" |
+    "BwNot" |
+    "Closure" |
+    "Yield" |
+    "Resume" |
+    "Foreach" |
+    "PostForeach" |
+    "Delegate" |
+    "Clone" |
+    "TypeOf" |
+    "PushTrap" |
+    "PopTrap" |
+    "Throw" |
+    "Class" |
+    "NewSlotA"
+  }
+}

@@ -5,7 +5,6 @@ import cats.effect.*
 import org.scalablytyped.runtime.StringDictionary
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
-import typings.lezerHighlight.mod as lezerHighlight
 import typings.lezerLr.mod as lezerLr
 import typings.codemirrorLanguage.mod as codemirrorLanguage
 import typings.codemirrorLanguage.anon.{Align, Except}

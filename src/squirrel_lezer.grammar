@@ -354,13 +354,13 @@ semi { ";" | insertSemi }
   hex { @digit | $[a-fA-F] }
 
   Float {
-    @digit+ "." @digit* ($[eE] $[-+]? @digit+)?
+    $[-+]? @digit+ "." @digit* ($[eE] $[-+]? @digit+)?
   }
 
   Integer {
-    "0" $[xX] hex+ |
+    $[-+]? ("0" $[xX] hex+ |
     "0" $[0-7]+ |
-    @digit+
+    @digit+)
   }
 
   @precedence { Float, Integer }
