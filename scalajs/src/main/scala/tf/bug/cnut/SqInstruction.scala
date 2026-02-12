@@ -73,54 +73,7 @@ final case class SqInstruction(
   arg2: Int,
   arg3: Int
 ) {
-
-  import tf.bug.cnut.SqInstructionType.*
-
-  def renderInto(renderedCnut: MutableCnutRender, parent: SqFunctionProto): Unit =
-    (sqInstructionType /* : @switch */) match {
-      case Load =>
-        renderInfo1(renderedCnut, parent.literals(arg1).show)
-      case LoadFloat =>
-        renderInfoFloat1(renderedCnut, arg1)
-      case DLoad =>
-        renderInfo13(renderedCnut, parent.literals(arg1).show, parent.literals(arg3).show)
-      case PrepCallK =>
-        renderInfo1(renderedCnut, parent.literals(arg1).show)
-      case GetK =>
-        renderInfo1(renderedCnut, parent.literals(arg1).show)
-      case Arith =>
-        renderInfo3(renderedCnut, arg3.toChar.toString)
-      case Bitw =>
-        val op = (arg3: @switch) match {
-          case 0 => "&"
-          case 2 => "|"
-          case 3 => "^"
-          case 4 => "<<"
-          case 5 => ">>"
-          case 6 => ">>>"
-          case _ => null
-        }
-        if op != null then renderInfo3(renderedCnut, op)
-        else renderRaw(renderedCnut)
-      case CompArith | CompArithL =>
-        renderInfo3(renderedCnut, arg3.toChar.toString)
-      case Cmp =>
-        val op = (arg3: @switch) match {
-          case 0 => ">"
-          case 2 => ">="
-          case 3 => "<"
-          case 4 => "<="
-          case _ => null
-        }
-        if op != null then renderInfo3(renderedCnut, op)
-        else renderRaw(renderedCnut)
-      case Closure =>
-        renderInfo1(renderedCnut, parent.functions(arg1).name.show)
-      case _ =>
-        renderRaw(renderedCnut)
-    }
-  
-  inline def renderRaw(inline renderedCnut: MutableCnutRender): Unit = {
+  def renderInto(renderedCnut: MutableCnutRender, parent: SqFunctionProto): Unit = {
     renderedCnut.fragment(sqInstructionType.toString)
     renderedCnut.fragment("(")
     renderedCnut.fragment(arg0.toString)
@@ -130,58 +83,6 @@ final case class SqInstruction(
     renderedCnut.fragment(arg2.toString)
     renderedCnut.fragment(", ")
     renderedCnut.fragment(arg3.toString)
-    renderedCnut.fragment(")")
-  }
-
-  inline def renderInfo1(inline renderedCnut: MutableCnutRender, inline info: String): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfo(arg1.toString, info)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg3.toString)
-    renderedCnut.fragment(")")
-  }
-
-  inline def renderInfoFloat1(inline renderedCnut: MutableCnutRender, inline infoBits: Int): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfoFloat(arg1.toString, infoBits)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg3.toString)
-    renderedCnut.fragment(")")
-  }
-
-  inline def renderInfo3(inline renderedCnut: MutableCnutRender, inline info: String): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg1.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfo(arg3.toString, info)
-    renderedCnut.fragment(")")
-  }
-
-  inline def renderInfo13(inline renderedCnut: MutableCnutRender, inline info1: String, inline info3: String): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfo(arg1.toString, info1)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfo(arg3.toString, info3)
     renderedCnut.fragment(")")
   }
 }

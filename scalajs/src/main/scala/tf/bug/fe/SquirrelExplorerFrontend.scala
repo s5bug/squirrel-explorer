@@ -2,14 +2,15 @@ package tf.bug.fe
 
 import calico.*
 import calico.html.io.{*, given}
-import cats.effect.{IO, Ref, Resource}
+import cats.effect.std.Dispatcher
+import cats.effect.{IO, Ref, Resource, SyncIO}
 import cats.syntax.all.*
 import fs2.*
 import fs2.concurrent.SignallingRef
 import fs2.dom.*
 import org.scalajs.dom.FileReader
 import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
-import typings.monacoEditor.esmVsEditorEditorDotapiMod as monaco
+import tf.bug.worker.DragonboxApi
 
 object SquirrelExplorerFrontend {
 
@@ -20,7 +21,6 @@ object SquirrelExplorerFrontend {
     compiledResult: SignallingRef[IO, RenderResult],
     uploadedResult: SignallingRef[IO, RenderResult]
   ): Resource[IO, HtmlElement[IO]] = {
-    Resource.eval(MonacoSquirrelLanguage.register) >>
     Resource.eval(uploadedRenderWk.setEncodingSjis(true)) >>
       div(
         idAttr := "grid-container",
@@ -29,23 +29,30 @@ object SquirrelExplorerFrontend {
       )
   }
 
-  def leftEditor(cwk: CompilerWorkerThread, rwk: RendererWorkerThread, compiledResult: SignallingRef[IO, RenderResult]): Resource[IO, HtmlElement[IO]] = {
-    div(
-      idAttr := "left-editor"
-    ).flatTap { container =>
-      MonacoEditor.create(container, language = Some("squirrel")).flatMap { editor =>
-        editor.discreteModel.switchMap(model => model.discreteValue.foreach { v =>
-          cwk.compileClosure(v).flatMap {
-            case Left(_) => IO.unit
-            case Right(ui8a) =>
-              rwk.tryToRender(ui8a).flatMap {
-                case Left(_) => IO.unit
-                case Right(rr) => compiledResult.set(rr)
-              }
-          }
-        }).compile.drain.background
+  def compileAndRenderLeftContent(content: String, cwk: CompilerWorkerThread, rwk: RendererWorkerThread): IO[Option[RenderResult]] = {
+    cwk.compileClosure(content).flatMap {
+      case Left(error) => IO.none // TODO
+      case Right(bytes) => rwk.tryToRender(bytes).flatMap {
+        case Left(error) => IO.none // TODO
+        case Right(result) => IO.some(result)
       }
     }
+  }
+
+  def leftEditor(cwk: CompilerWorkerThread, rwk: RendererWorkerThread, compiledResult: SignallingRef[IO, RenderResult]): Resource[IO, HtmlElement[IO]] = Dispatcher.sequential(true).flatMap { dispatch =>
+    Resource.eval(compileAndRenderLeftContent("", cwk, rwk).flatMap(_.traverse_(compiledResult.set))) >> div(
+      idAttr := "left-editor",
+      CodemirrorView(CodemirrorViewConfig().setExtensionsVarargs(
+        Codemirror.basicSetup,
+        Codemirror.minimap(dispatch)(Codemirror.MinimapConfig(_ => SyncIO { org.scalajs.dom.document.createElement("div").asInstanceOf[fs2.dom.HtmlElement[IO]] })),
+        LezerSquirrelLanguage.squirrel,
+        CodemirrorView.updateListener(dispatch) { vu =>
+          IO.whenA(vu.docChanged) {
+            compileAndRenderLeftContent(vu.state.doc.toString, cwk, rwk).flatMap(_.traverse_(compiledResult.set))
+          }
+        }
+      )).map(_.dom)
+    )
   }
 
   def readFile(file: org.scalajs.dom.File): IO[Uint8Array] =
@@ -57,108 +64,75 @@ object SquirrelExplorerFrontend {
       reader.readAsArrayBuffer(file)
     }
 
+  def replaceView(v: CodemirrorView, s: String): IO[Unit] = {
+    val change = typings.codemirrorState.anon.From(0)
+    change.to = v.state.doc.length
+    change.insert = s
+
+    val transactionSpec =
+      typings.codemirrorState.mod.TransactionSpec()
+        .setChanges(change)
+
+    v.dispatch(transactionSpec)
+  }
+
   def rightEditor(
     rwk: RendererWorkerThread,
     compiledResult: SignallingRef[IO, RenderResult],
     uploadedResult: SignallingRef[IO, RenderResult]
-  ): Resource[IO, HtmlElement[IO]] = {
+  ): Resource[IO, HtmlElement[IO]] = Dispatcher.sequential(true).flatMap { dispatch =>
     div(
       idAttr := "right-panel",
-      input.withSelf { self => (
-        `type` := "file",
-        onChange --> (_.foreach { ev =>
-          val files = IO.delay(self.asInstanceOf[org.scalajs.dom.HTMLInputElement].files)
-          files.flatMap { fl =>
-            if fl.length < 1 then IO.unit
-            else {
-              SquirrelExplorerFrontend.readFile(fl.item(0)).flatMap { buf =>
-                rwk.tryToRender(buf).flatMap {
-                  case Left(_) => IO.unit
-                  case Right(rr) => uploadedResult.set(rr)
-                }
-              }
-            }
-          }
-        })
-      )},
-      div(idAttr := "right-editor").flatTap { container =>
+      input.withSelf { self =>
         (
-          Resource.eval(Ref.of[IO, scalajs.js.Array[monaco.languages.InlayHint]](scalajs.js.Array())),
-          Resource.eval(Ref.of[IO, scalajs.js.Array[monaco.languages.InlayHint]](scalajs.js.Array())),
-        ).parFlatMapN {
-          (uploadedHints, compiledHints) =>
-            Resource.eval(IO(monaco.languages.register(monaco.languages.ILanguageExtensionPoint("cnut")))) >>
-            MonacoDiffEditor.create(container, "cnut", "cnut_diff").flatMap { editor =>
-              MonacoDiffEditorViewModel.of(editor).flatMap { vm =>
-                InlayHintsProvider.register("cnut") { (model, range, ct) =>
-                  editor.model.flatMap { dm =>
-                    val hintArray =
-                      if model.id == dm.original.id then {
-                        uploadedHints.get
-                      } else if model.id == dm.modified.id then {
-                        compiledHints.get
-                      } else IO.raiseError(new RuntimeException("Unknown model with cnut language"))
-                    hintArray.map { arr =>
-                      val slice = SquirrelExplorerFrontend.binarySearchSlice(arr, range)
-                      monaco.languages.InlayHintList(() => (), slice)
-                    }
+          `type` := "file",
+          onChange --> (_.foreach { ev =>
+            val files = IO.delay(self.asInstanceOf[org.scalajs.dom.HTMLInputElement].files)
+            files.flatMap { fl =>
+              if fl.length < 1 then IO.unit
+              else {
+                SquirrelExplorerFrontend.readFile(fl.item(0)).flatMap { buf =>
+                  rwk.tryToRender(buf).flatMap {
+                    case Left(_) => IO.unit
+                    case Right(rr) => uploadedResult.set(rr)
                   }
-                }.flatMap { _ =>
-                  val renderedDiscrete = uploadedResult.discrete.either(compiledResult.discrete).foreach {
-                    case Left(uploaded) =>
-                      editor.setOriginalResult(vm, uploaded, uploadedHints)
-                    case Right(compiled) =>
-                      editor.setModifiedResult(vm, compiled, compiledHints)
-                  }
-                  renderedDiscrete.compile.drain.background
                 }
               }
             }
-        }
-      }
+          })
+        )
+      },
+      div(
+        idAttr := "right-editor",
+        CodemirrorMergeView(
+          CodemirrorStateConfig()
+            .setExtensionsVarargs(
+              Codemirror.minimalSetup,
+              CodemirrorView.lineNumbers,
+              CodemirrorState.readOnly.of(true),
+              CodemirrorView.editable.of(false),
+              LezerCnutLanguage.cnut,
+              LezerCnutLanguage.cnutLinter(dispatch),
+            ),
+          CodemirrorStateConfig()
+            .setExtensionsVarargs(
+              Codemirror.minimalSetup,
+              CodemirrorView.lineNumbers,
+              CodemirrorState.readOnly.of(true),
+              CodemirrorView.editable.of(false),
+              LezerCnutLanguage.cnut,
+              LezerCnutLanguage.cnutLinter(dispatch),
+            )
+        ).flatTap { mv =>
+          val renderUploadedToA = uploadedResult.discrete.foreach { rr =>
+            replaceView(mv.a, rr.rawText)
+          }
+          val renderCompiledToB = (Stream.eval(compiledResult.get) ++ compiledResult.discrete).foreach { rr =>
+            replaceView(mv.b, rr.rawText)
+          }
+          (renderUploadedToA.merge(renderCompiledToB)).compile.drain.background
+        }.map(_.dom)
+      )
     )
-  }
-
-  def binarySearchSlice(
-    arr: scalajs.js.Array[monaco.languages.InlayHint],
-    range: monaco.Range
-  ): scalajs.js.Array[monaco.languages.InlayHint] = {
-    if arr.length <= 2 then return arr
-
-    val firstLessThanLine = range.startLineNumber
-    val firstGreaterThanLine = range.endLineNumber
-
-    // Do a binary search to find a lower transition point
-    var fltLo = -1
-    var fltHi = arr.length
-    while (1 + fltLo) < fltHi do {
-      val mid = fltLo + ((fltHi - fltLo) >> 1)
-
-      val elem = arr(mid)
-      // pred(elem) = is the elem after the first LT line
-      if elem.position.lineNumber >= firstLessThanLine then {
-        fltHi = mid
-      } else {
-        fltLo = mid
-      }
-    }
-    val ixOfFirst = fltHi - 1
-
-    var fgtLo = -1
-    var fgtHi = arr.length
-    while (1 + fgtLo) < fgtHi do {
-      val mid = fgtLo + ((fgtHi - fgtLo) >> 1)
-
-      val elem = arr(mid)
-      // pred(elem) = is the elem after the first GT line
-      if elem.position.lineNumber > firstGreaterThanLine then {
-        fgtHi = mid
-      } else {
-        fgtLo = mid
-      }
-    }
-    val ixOfLast = fgtHi - 1
-
-    arr.jsSlice(ixOfFirst.max(0), 1 + ixOfLast)
   }
 }

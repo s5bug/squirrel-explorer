@@ -53,23 +53,10 @@ object RendererWorkerThread {
     override def tryToRender(cnut: Uint8Array): IO[Either[String, RenderResult]] =
       lock.lock.use { _ =>
         IO.async_[Either[String, RenderResult]] { cb =>
-          // FIXME this is really ugly but I don't know a better way
-          val stuff: js.Array[String] = js.Array()
           internal.onmessage = e => e.data match {
             case s: String =>
               if s.startsWith("[error] ") then cb(Right(Left(s.substring(8))))
-              else {
-                stuff.push(s)
-                if stuff.length >= 3 then {
-                  cb(Right(Right(
-                    RenderResult(
-                      stuff(0),
-                      js.JSON.parse(stuff(1)).asInstanceOf,
-                      js.JSON.parse(stuff(2)).asInstanceOf
-                    )
-                  )))
-                }
-              }
+              else cb(Right(Right(RenderResult(s))))
           }
           internal.postMessage(cnut)
         }
