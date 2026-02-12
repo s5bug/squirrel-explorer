@@ -13,16 +13,16 @@ private def safeOpt[A](a: A | Null | Unit): Option[A] = {
   }
 }
 
-opaque type LezerRender = lezerCommon.SyntaxNode => String
+opaque type LezerRender = lezerCommon.SyntaxNode => Option[String]
 
 object LezerRender {
-  inline def of(fn: lezerCommon.SyntaxNode => String): LezerRender = fn
+  inline def of(fn: lezerCommon.SyntaxNode => Option[String]): LezerRender = fn
 }
 
 extension(node: LezerFunctionProto | LezerObject | LezerOuterValue | LezerLocalVarInfo | LezerInt | LezerInstruction | LezerInstructionType) {
   def from: Int = node.from.toInt
   def to: Int = node.to.toInt
-  def text(using render: LezerRender): String = render(node)
+  def text(using render: LezerRender): Option[String] = render(node)
 }
 
 opaque type LezerFunctionProto <: scalajs.js.Any = lezerCommon.SyntaxNode
@@ -68,6 +68,11 @@ object LezerFunctionProto {
       safeOpt(lfp.getChild("FunctionInstructions"))
         .flatMap(fl => safeOpt(fl.getChild("Array")))
         .map(a => a.getChildren("Instruction").view.filterNot(_ == null).to(NArrayFactory.of[lezerCommon.SyntaxNode]))
+        
+    def functions: Option[NArray[LezerFunctionProto]] =
+      safeOpt(lfp.getChild("FunctionFunctions"))
+        .flatMap(fl => safeOpt(fl.getChild("Array")))
+        .map(a => a.getChildren("FunctionProto").view.filterNot(_ == null).to(NArrayFactory.of[lezerCommon.SyntaxNode]))
   }
 }
 
@@ -105,7 +110,7 @@ opaque type LezerInt = lezerCommon.SyntaxNode
 
 object LezerInt {
   extension(li: LezerInt) {
-    def value(using render: LezerRender): Int = li.text.toInt
+    def value(using render: LezerRender): Option[Int] = li.text.map(_.toInt)
   }
 }
 
@@ -134,6 +139,6 @@ opaque type LezerInstructionType = lezerCommon.SyntaxNode
 
 object LezerInstructionType {
   extension (lit: LezerInstructionType) {
-    def value(using render: LezerRender): SqInstructionType = SqInstructionType.valueOf(lit.text)
+    def value(using render: LezerRender): Option[SqInstructionType] = lit.text.map(SqInstructionType.valueOf)
   }
 }
