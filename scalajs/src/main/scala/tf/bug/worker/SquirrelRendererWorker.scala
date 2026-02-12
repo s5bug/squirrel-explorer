@@ -15,22 +15,10 @@ object SquirrelRendererWorker {
   private var encodingSjis: Boolean = false
   
   def main(args: Array[String]): Unit = {
-    val accumulator: js.Array[String | Uint8Array] = js.Array()
+    val render = new MutableCnutRender()
+
     js.Dynamic.global.onmessage =
-      (e => accumulator.push(e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
-
-    DragonboxApi.get.`then` { (dboxApi: DragonboxApi) =>
-      val render = new MutableCnutRender(dboxApi)
-
-      js.Dynamic.global.onmessage =
-        (e => onMessage(render, e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
-
-      var i = 0
-      while i < accumulator.length do {
-        onMessage(render, accumulator(i))
-        i += 1
-      }
-    }
+      (e => onMessage(render, e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
   }
 
   def returnMessage(content: String): Unit =
@@ -56,8 +44,6 @@ object SquirrelRendererWorker {
             value.renderInto(this.renderLineInfos, 0, render)
             
             returnMessage(render.rawText())
-//            returnMessage(render.hintsJson())
-//            returnMessage(render.markersJson())
           case Attempt.Failure(cause) => returnMessage(s"[error] $cause")
         }
     }

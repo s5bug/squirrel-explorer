@@ -6,7 +6,7 @@ import scala.scalajs.js
 import scala.scalajs.js.typedarray.Int32Array
 import tf.bug.worker.DragonboxApi
 
-final class MutableCnutRender(dboxApi: DragonboxApi) { self =>
+final class MutableCnutRender() { self =>
 
   private var lineNumber: Int = 1
   private var column: Int = 1

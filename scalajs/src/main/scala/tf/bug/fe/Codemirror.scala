@@ -27,6 +27,10 @@ object Codemirror {
       typings.replitCodemirrorMinimap.anon.Dom(elem.asInstanceOf)
     }
   }
+  
+  def linter(dispatcher: Dispatcher[IO])(fn: codemirrorView.EditorView => IO[js.Array[typings.codemirrorLint.mod.Diagnostic]]): Extension = typings.codemirrorLint.mod.linter { view =>
+    dispatcher.unsafeToPromise(fn(view))
+  }
 }
 
 type CodemirrorStateConfig = codemirrorState.EditorStateConfig
