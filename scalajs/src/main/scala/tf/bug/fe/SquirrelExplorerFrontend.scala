@@ -10,6 +10,7 @@ import fs2.concurrent.SignallingRef
 import fs2.dom.*
 import org.scalajs.dom.FileReader
 import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
+import tf.bug.cnut.RenderedCnut
 import tf.bug.worker.DragonboxApi
 
 object SquirrelExplorerFrontend {
@@ -18,8 +19,8 @@ object SquirrelExplorerFrontend {
     compilerWk: CompilerWorkerThread,
     compiledRenderWk: RendererWorkerThread,
     uploadedRenderWk: RendererWorkerThread,
-    compiledResult: SignallingRef[IO, RenderResult],
-    uploadedResult: SignallingRef[IO, RenderResult]
+    compiledResult: SignallingRef[IO, Option[RenderedCnut]],
+    uploadedResult: SignallingRef[IO, Option[RenderedCnut]]
   ): Resource[IO, HtmlElement[IO]] = {
     Resource.eval(uploadedRenderWk.setEncodingSjis(true)) >>
       div(
@@ -29,7 +30,7 @@ object SquirrelExplorerFrontend {
       )
   }
 
-  def compileAndRenderLeftContent(content: String, cwk: CompilerWorkerThread, rwk: RendererWorkerThread): IO[Option[RenderResult]] = {
+  def compileAndRenderLeftContent(content: String, cwk: CompilerWorkerThread, rwk: RendererWorkerThread): IO[Option[RenderedCnut]] = {
     cwk.compileClosure(content).flatMap {
       case Left(error) => IO.none // TODO
       case Right(bytes) => rwk.tryToRender(bytes).flatMap {
@@ -39,8 +40,8 @@ object SquirrelExplorerFrontend {
     }
   }
 
-  def leftEditor(cwk: CompilerWorkerThread, rwk: RendererWorkerThread, compiledResult: SignallingRef[IO, RenderResult]): Resource[IO, HtmlElement[IO]] = Dispatcher.sequential(true).flatMap { dispatch =>
-    Resource.eval(compileAndRenderLeftContent("", cwk, rwk).flatMap(_.traverse_(compiledResult.set))) >> div(
+  def leftEditor(cwk: CompilerWorkerThread, rwk: RendererWorkerThread, compiledResult: SignallingRef[IO, Option[RenderedCnut]]): Resource[IO, HtmlElement[IO]] = Dispatcher.sequential(true).flatMap { dispatch =>
+    Resource.eval(compileAndRenderLeftContent("", cwk, rwk).flatMap(_.traverse_(r => compiledResult.set(Some(r))))) >> div(
       idAttr := "left-editor",
       CodemirrorView(CodemirrorViewConfig().setExtensionsVarargs(
         Codemirror.basicSetup,
@@ -48,7 +49,7 @@ object SquirrelExplorerFrontend {
         LezerSquirrelLanguage.squirrel,
         CodemirrorView.updateListener(dispatch) { vu =>
           IO.whenA(vu.docChanged) {
-            compileAndRenderLeftContent(vu.state.doc.toString, cwk, rwk).flatMap(_.traverse_(compiledResult.set))
+            compileAndRenderLeftContent(vu.state.doc.toString, cwk, rwk).flatMap(_.traverse_(r => compiledResult.set(Some(r))))
           }
         }
       )).map(_.dom)
@@ -64,22 +65,33 @@ object SquirrelExplorerFrontend {
       reader.readAsArrayBuffer(file)
     }
 
-  def replaceView(v: CodemirrorView, s: String): IO[Unit] = {
-    val change = typings.codemirrorState.anon.From(0)
-    change.to = v.state.doc.length
-    change.insert = s
-
+  def replaceView(v: CodemirrorView, next: RenderedCnut): IO[Unit] = v.state.field(CnutEditorState.cnutField).flatMap { current =>
     val transactionSpec =
       typings.codemirrorState.mod.TransactionSpec()
-        .setChanges(change)
+
+    val nextAnnotation = CnutEditorState.cnutAnnotationType.of(Some(next))
+    // ST incorrectly types this as Annotation[Any] instead of Annotation[?]
+    transactionSpec.setAnnotationsVarargs(nextAnnotation.asInstanceOf[typings.codemirrorState.mod.Annotation[Any]])
+
+    current match {
+      case None =>
+        val change = typings.codemirrorState.anon.From(0)
+        change.to = v.state.doc.length
+        change.insert = next.string
+
+        transactionSpec.setChanges(change)
+      case Some(preDiff) =>
+        val changes: scalajs.js.Array[typings.codemirrorState.anon.From] = RenderedCnut.diff(preDiff, next)
+        transactionSpec.setChanges(changes.asInstanceOf[scalajs.js.Array[Any]])
+    }
 
     v.dispatch(transactionSpec)
   }
 
   def rightEditor(
     rwk: RendererWorkerThread,
-    compiledResult: SignallingRef[IO, RenderResult],
-    uploadedResult: SignallingRef[IO, RenderResult]
+    compiledResult: SignallingRef[IO, Option[RenderedCnut]],
+    uploadedResult: SignallingRef[IO, Option[RenderedCnut]]
   ): Resource[IO, HtmlElement[IO]] = Dispatcher.sequential(true).flatMap { dispatch =>
     div(
       idAttr := "right-panel",
@@ -94,7 +106,7 @@ object SquirrelExplorerFrontend {
                 SquirrelExplorerFrontend.readFile(fl.item(0)).flatMap { buf =>
                   rwk.tryToRender(buf).flatMap {
                     case Left(_) => IO.unit
-                    case Right(rr) => uploadedResult.set(rr)
+                    case Right(rr) => uploadedResult.set(Some(rr))
                   }
                 }
               }
@@ -111,6 +123,7 @@ object SquirrelExplorerFrontend {
               CodemirrorView.lineNumbers,
               CodemirrorState.readOnly.of(true),
               CodemirrorView.editable.of(false),
+              CnutEditorState.cnutField,
               LezerCnutLanguage.cnut,
               LezerCnutLanguage.cnutLinter(dispatch),
             ),
@@ -120,15 +133,16 @@ object SquirrelExplorerFrontend {
               CodemirrorView.lineNumbers,
               CodemirrorState.readOnly.of(true),
               CodemirrorView.editable.of(false),
+              CnutEditorState.cnutField,
               LezerCnutLanguage.cnut,
               LezerCnutLanguage.cnutLinter(dispatch),
             )
         ).flatTap { mv =>
-          val renderUploadedToA = uploadedResult.discrete.foreach { rr =>
-            replaceView(mv.a, rr.rawText)
+          val renderUploadedToA = uploadedResult.discrete.unNone.foreach { rr =>
+            replaceView(mv.a, rr)
           }
-          val renderCompiledToB = (Stream.eval(compiledResult.get) ++ compiledResult.discrete).foreach { rr =>
-            replaceView(mv.b, rr.rawText)
+          val renderCompiledToB = (Stream.eval(compiledResult.get) ++ compiledResult.discrete).unNone.foreach { rr =>
+            replaceView(mv.b, rr)
           }
           (renderUploadedToA.merge(renderCompiledToB)).compile.drain.background
         }.map(_.dom)

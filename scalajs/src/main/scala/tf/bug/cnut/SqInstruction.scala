@@ -73,16 +73,73 @@ final case class SqInstruction(
   arg2: Int,
   arg3: Int
 ) {
-  def renderInto(renderedCnut: MutableCnutRender, parent: SqFunctionProto): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg1.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg3.toString)
-    renderedCnut.fragment(")")
+  
+  def diagnostic(builder: Diagnostic.Builder, rendered: RenderedCnut.Instruction, context: SqFunctionProto, myIdx: Int): Unit = this.sqInstructionType match {
+    case SqInstructionType.Load =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addDiagnostic(rendered.arg1, context.literals(arg1).show)
+    case SqInstructionType.LoadInt =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+    case SqInstructionType.LoadFloat =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addFloatDiagnostic(rendered.arg1, arg1)
+    case SqInstructionType.DLoad =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addDiagnostic(rendered.arg1, context.literals(arg1).show)
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
+      builder.addDiagnostic(rendered.arg3, context.literals(arg3).show)
+    case SqInstructionType.PrepCallK =>
+      builder.addDiagnostic(rendered.arg1, context.literals(arg1).show)
+    case SqInstructionType.GetK =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addDiagnostic(rendered.arg1, context.literals(arg1).show)
+    case SqInstructionType.Arith =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
+      builder.addDiagnostic(rendered.arg3, arg3.toChar.toString)
+    case SqInstructionType.Bitw =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
+
+      val op = (arg3: @switch) match {
+        case 0 => "&"
+        case 2 => "|"
+        case 3 => "^"
+        case 4 => "<<"
+        case 5 => ">>"
+        case 6 => ">>>"
+        case 7 => null
+      }
+      
+      builder.addDiagnostic(rendered.arg3, op)
+    case SqInstructionType.CompArith =>
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      builder.addDiagnostic(rendered.arg3, arg3.toChar.toString)
+    case SqInstructionType.CompArithL =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
+      builder.addDiagnostic(rendered.arg3, arg3.toChar.toString)
+    case SqInstructionType.Cmp =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
+
+      val op = (arg3: @switch) match {
+        case 0 => ">"
+        case 2 => ">="
+        case 3 => "<"
+        case 4 => "<="
+        case _ => null
+      }
+
+      builder.addDiagnostic(rendered.arg3, op)
+    case SqInstructionType.Closure =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addDiagnostic(rendered.arg1, context.functions(arg1).name.show)
+    case _ => ()
   }
+  
 }

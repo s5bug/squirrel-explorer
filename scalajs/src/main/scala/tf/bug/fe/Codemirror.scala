@@ -28,9 +28,9 @@ object Codemirror {
     }
   }
   
-  def linter(dispatcher: Dispatcher[IO])(fn: codemirrorView.EditorView => IO[js.Array[typings.codemirrorLint.mod.Diagnostic]]): Extension = typings.codemirrorLint.mod.linter { view =>
+  def linter(dispatcher: Dispatcher[IO], config: typings.codemirrorLint.mod.LintConfig)(fn: codemirrorView.EditorView => IO[js.Array[typings.codemirrorLint.mod.Diagnostic]]): Extension = typings.codemirrorLint.mod.linter({ view =>
     dispatcher.unsafeToPromise(fn(view))
-  }
+  }, config)
 }
 
 type CodemirrorStateConfig = codemirrorState.EditorStateConfig
@@ -49,6 +49,8 @@ object CodemirrorState {
 
   extension(cms: CodemirrorState) {
     inline def doc: codemirrorState.Text = cms.doc
+    
+    def field[T](annotationType: codemirrorState.StateField[T]): IO[T] = IO(cms.field[T](annotationType))
   }
 }
 
