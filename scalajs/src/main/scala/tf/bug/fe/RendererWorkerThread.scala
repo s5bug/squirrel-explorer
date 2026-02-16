@@ -7,6 +7,7 @@ import org.scalajs.dom.{Worker, WorkerOptions, WorkerType}
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import scala.scalajs.js.typedarray.Uint8Array
+import tf.bug.cnut.RenderedCnut
 import tf.bug.worker.{RenderCommand, RenderEncodingSjis, RenderLineInfos}
 
 abstract class RendererWorkerThread {
@@ -14,7 +15,7 @@ abstract class RendererWorkerThread {
   def setRenderLineInfos(value: Boolean): IO[Unit]
   def setEncodingSjis(value: Boolean): IO[Unit]
 
-  def tryToRender(cnut: Uint8Array): IO[Either[String, RenderResult]]
+  def tryToRender(cnut: Uint8Array): IO[Either[String, RenderedCnut]]
 
 }
 
@@ -50,26 +51,13 @@ object RendererWorkerThread {
       IO(internal.postMessage(j))
     }
 
-    override def tryToRender(cnut: Uint8Array): IO[Either[String, RenderResult]] =
+    override def tryToRender(cnut: Uint8Array): IO[Either[String, RenderedCnut]] =
       lock.lock.use { _ =>
-        IO.async_[Either[String, RenderResult]] { cb =>
-          // FIXME this is really ugly but I don't know a better way
-          val stuff: js.Array[String] = js.Array()
+        IO.async_[Either[String, RenderedCnut]] { cb =>
           internal.onmessage = e => e.data match {
             case s: String =>
               if s.startsWith("[error] ") then cb(Right(Left(s.substring(8))))
-              else {
-                stuff.push(s)
-                if stuff.length >= 3 then {
-                  cb(Right(Right(
-                    RenderResult(
-                      stuff(0),
-                      js.JSON.parse(stuff(1)).asInstanceOf,
-                      js.JSON.parse(stuff(2)).asInstanceOf
-                    )
-                  )))
-                }
-              }
+              else cb(Right(Right(jsoniter_scala.core.readFromString[RenderedCnut](s))))
           }
           internal.postMessage(cnut)
         }

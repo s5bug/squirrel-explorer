@@ -73,115 +73,73 @@ final case class SqInstruction(
   arg2: Int,
   arg3: Int
 ) {
-
-  import tf.bug.cnut.SqInstructionType.*
-
-  def renderInto(renderedCnut: MutableCnutRender, parent: SqFunctionProto): Unit =
-    (sqInstructionType /* : @switch */) match {
-      case Load =>
-        renderInfo1(renderedCnut, parent.literals(arg1).show)
-      case LoadFloat =>
-        renderInfoFloat1(renderedCnut, arg1)
-      case DLoad =>
-        renderInfo13(renderedCnut, parent.literals(arg1).show, parent.literals(arg3).show)
-      case PrepCallK =>
-        renderInfo1(renderedCnut, parent.literals(arg1).show)
-      case GetK =>
-        renderInfo1(renderedCnut, parent.literals(arg1).show)
-      case Arith =>
-        renderInfo3(renderedCnut, arg3.toChar.toString)
-      case Bitw =>
-        val op = (arg3: @switch) match {
-          case 0 => "&"
-          case 2 => "|"
-          case 3 => "^"
-          case 4 => "<<"
-          case 5 => ">>"
-          case 6 => ">>>"
-          case _ => null
-        }
-        if op != null then renderInfo3(renderedCnut, op)
-        else renderRaw(renderedCnut)
-      case CompArith | CompArithL =>
-        renderInfo3(renderedCnut, arg3.toChar.toString)
-      case Cmp =>
-        val op = (arg3: @switch) match {
-          case 0 => ">"
-          case 2 => ">="
-          case 3 => "<"
-          case 4 => "<="
-          case _ => null
-        }
-        if op != null then renderInfo3(renderedCnut, op)
-        else renderRaw(renderedCnut)
-      case Closure =>
-        renderInfo1(renderedCnut, parent.functions(arg1).name.show)
-      case _ =>
-        renderRaw(renderedCnut)
-    }
   
-  inline def renderRaw(inline renderedCnut: MutableCnutRender): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg1.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg3.toString)
-    renderedCnut.fragment(")")
-  }
+  def diagnostic(builder: Diagnostic.Builder, rendered: RenderedCnut.Instruction, context: SqFunctionProto, myIdx: Int): Unit = this.sqInstructionType match {
+    case SqInstructionType.Load =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addDiagnostic(rendered.arg1, context.literals(arg1).show)
+    case SqInstructionType.LoadInt =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+    case SqInstructionType.LoadFloat =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addFloatDiagnostic(rendered.arg1, arg1)
+    case SqInstructionType.DLoad =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addDiagnostic(rendered.arg1, context.literals(arg1).show)
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
+      builder.addDiagnostic(rendered.arg3, context.literals(arg3).show)
+    case SqInstructionType.PrepCallK =>
+      builder.addDiagnostic(rendered.arg1, context.literals(arg1).show)
+    case SqInstructionType.GetK =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addDiagnostic(rendered.arg1, context.literals(arg1).show)
+    case SqInstructionType.Arith =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
+      builder.addDiagnostic(rendered.arg3, arg3.toChar.toString)
+    case SqInstructionType.Bitw =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
 
-  inline def renderInfo1(inline renderedCnut: MutableCnutRender, inline info: String): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfo(arg1.toString, info)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg3.toString)
-    renderedCnut.fragment(")")
-  }
+      val op = (arg3: @switch) match {
+        case 0 => "&"
+        case 2 => "|"
+        case 3 => "^"
+        case 4 => "<<"
+        case 5 => ">>"
+        case 6 => ">>>"
+        case 7 => null
+      }
+      
+      builder.addDiagnostic(rendered.arg3, op)
+    case SqInstructionType.CompArith =>
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      builder.addDiagnostic(rendered.arg3, arg3.toChar.toString)
+    case SqInstructionType.CompArithL =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
+      builder.addDiagnostic(rendered.arg3, arg3.toChar.toString)
+    case SqInstructionType.Cmp =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      context.localVarAt(arg1, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg1, lv.name.show))
+      context.localVarAt(arg2, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg2, lv.name.show))
 
-  inline def renderInfoFloat1(inline renderedCnut: MutableCnutRender, inline infoBits: Int): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfoFloat(arg1.toString, infoBits)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg3.toString)
-    renderedCnut.fragment(")")
-  }
+      val op = (arg3: @switch) match {
+        case 0 => ">"
+        case 2 => ">="
+        case 3 => "<"
+        case 4 => "<="
+        case _ => null
+      }
 
-  inline def renderInfo3(inline renderedCnut: MutableCnutRender, inline info: String): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg1.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfo(arg3.toString, info)
-    renderedCnut.fragment(")")
+      builder.addDiagnostic(rendered.arg3, op)
+    case SqInstructionType.Closure =>
+      context.localVarAt(arg0, myIdx).foreach(lv => builder.addDiagnostic(rendered.arg0, lv.name.show))
+      builder.addDiagnostic(rendered.arg1, context.functions(arg1).name.show)
+    case _ => ()
   }
-
-  inline def renderInfo13(inline renderedCnut: MutableCnutRender, inline info1: String, inline info3: String): Unit = {
-    renderedCnut.fragment(sqInstructionType.toString)
-    renderedCnut.fragment("(")
-    renderedCnut.fragment(arg0.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfo(arg1.toString, info1)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragment(arg2.toString)
-    renderedCnut.fragment(", ")
-    renderedCnut.fragmentInfo(arg3.toString, info3)
-    renderedCnut.fragment(")")
-  }
+  
 }

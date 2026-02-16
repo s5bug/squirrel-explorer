@@ -7,7 +7,7 @@ import scala.scalajs.js
 import scala.scalajs.js.typedarray.Uint8Array
 import scodec.{Attempt, DecodeResult}
 import scodec.bits.{BitVector, ByteVector}
-import tf.bug.cnut.{Cnut, MutableCnutRender, SqClosure}
+import tf.bug.cnut.{Cnut, Diagnostic, RenderedCnut, SqClosure}
 
 object SquirrelRendererWorker {
 
@@ -20,14 +20,14 @@ object SquirrelRendererWorker {
       (e => accumulator.push(e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
 
     DragonboxApi.get.`then` { (dboxApi: DragonboxApi) =>
-      val render = new MutableCnutRender(dboxApi)
+      val diagnosticBuilder = Diagnostic.Builder(dboxApi)
 
       js.Dynamic.global.onmessage =
-        (e => onMessage(render, e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
+        (e => onMessage(diagnosticBuilder, e.data.asInstanceOf[String | Uint8Array])): js.Function1[MessageEvent, Unit]
 
       var i = 0
       while i < accumulator.length do {
-        onMessage(render, accumulator(i))
+        onMessage(diagnosticBuilder, accumulator(i))
         i += 1
       }
     }
@@ -36,7 +36,7 @@ object SquirrelRendererWorker {
   def returnMessage(content: String): Unit =
     js.Dynamic.global.postMessage(content)
   
-  def onMessage(render: MutableCnutRender, cnutBytesOrCommandJson: String | Uint8Array): Unit = {
+  def onMessage(diagnosticBuilder: Diagnostic.Builder, cnutBytesOrCommandJson: String | Uint8Array): Unit = {
     cnutBytesOrCommandJson match {
       case commandStr: String =>
         val command = jsoniter_scala.core.readFromString[RenderCommand](commandStr)
@@ -52,12 +52,9 @@ object SquirrelRendererWorker {
         
         parsed match {
           case Attempt.Successful(DecodeResult(value, _)) =>
-            render.reset()
-            value.renderInto(this.renderLineInfos, 0, render)
+            val rendered = RenderedCnut.render(value, diagnosticBuilder)
             
-            returnMessage(render.rawText())
-            returnMessage(render.hintsJson())
-            returnMessage(render.markersJson())
+            returnMessage(jsoniter_scala.core.writeToString[RenderedCnut](rendered))
           case Attempt.Failure(cause) => returnMessage(s"[error] $cause")
         }
     }

@@ -1,0 +1,385 @@
+@precedence {
+  else @right,
+  member,
+  call,
+  prefix,
+  postfix,
+  typeof,
+  times @left,
+  plus @left,
+  shift @left,
+  rel @left,
+  bitAnd @left,
+  bitXor @left,
+  bitOr @left,
+  and @left,
+  or @left,
+  ternary @right,
+  assign @right,
+  comma @left,
+  statement @cut
+}
+
+@top File { statement* }
+
+statement[@isGroup=Statement] {
+  BlockStatement |
+  IfStatement |
+  WhileStatement |
+  DoWhileStatement |
+  SwitchStatement |
+  ForStatement |
+  ForeachStatement |
+  BreakStatement |
+  ContinueStatement |
+  ReturnStatement |
+  YieldStatement |
+  LocalStatement |
+  FunctionStatement |
+  ClassStatement |
+  TryCatchStatement |
+  ThrowStatement |
+  ConstStatement |
+  EnumStatement |
+  ExpressionStatement
+}
+
+BlockStatement {
+  !statement "{" statement* "}"
+}
+
+IfStatement {
+  kw<"if"> "(" expression ")" statement (!else kw<"else"> statement)?
+}
+
+WhileStatement {
+  kw<"while"> "(" expression ")" statement
+}
+
+DoWhileStatement {
+  kw<"do"> statement kw<"while"> "(" expression ")" semi
+}
+
+SwitchStatement {
+  kw<"switch"> "(" expression ")" "{" switchCase* defaultCase? "}"
+}
+
+switchCase {
+  kw<"case"> expression ":" statement*
+}
+
+defaultCase {
+  kw<"default"> ":" statement*
+}
+
+ForStatement {
+  kw<"for"> "(" forInit? ";" expression? ";" expression? ")" statement
+}
+
+forInit {
+  AssignmentExpression ("," AssignmentExpression)* |
+  LocalStatement
+}
+
+ForeachStatement {
+  kw<"foreach"> "(" (Identifier ",")? Identifier kw<"in"> expression ")" statement
+}
+
+BreakStatement {
+  kw<"break"> semi
+}
+
+ContinueStatement {
+  kw<"continue"> semi
+}
+
+ReturnStatement {
+  kw<"return"> expression semi
+}
+
+YieldStatement {
+  kw<"yield"> expression semi
+}
+
+LocalStatement {
+  kw<"local"> localAssignment ("," localAssignment)* semi
+}
+
+localAssignment {
+  Identifier ("=" expressionNoComma)?
+}
+
+FunctionStatement {
+  kw<"function"> Identifier functionSignature
+}
+
+functionSignature {
+  ("::" Identifier)* "(" functionArgs? ")" (":" "(" functionCaptures? ")")? statement
+}
+
+functionArgs {
+  Identifier ("," Identifier)* ("," "...")? |
+  "..."
+}
+
+functionCaptures {
+  Identifier ("," Identifier)*
+}
+
+ClassStatement {
+  kw<"class"> DerefExpression (kw<"extends"> DerefExpression)? "{" classMember* "}"
+}
+
+classMember {
+  kw<"static">? Identifier "=" expression semi |
+  "[" expression "]" "=" expression semi |
+  FunctionStatement |
+  kw<"constructor"> functionSignature
+}
+
+TryCatchStatement {
+  kw<"try"> statement kw<"catch"> "(" Identifier ")" statement
+}
+
+ThrowStatement {
+  kw<"throw"> expression semi
+}
+
+ConstStatement {
+  kw<"const"> Identifier "=" (String | Integer | Float) semi
+}
+
+EnumStatement {
+  kw<"enum"> Identifier "{" enumEnumerations? "}"
+}
+
+enumEnumerations {
+  enumEnumeration ("," enumEnumeration)*
+}
+
+enumEnumeration {
+  Identifier "=" (String | Integer | Float)
+}
+
+expression[@isGroup=Expression] {
+  expressionNoComma | SequenceExpression
+}
+
+SequenceExpression {
+  expressionNoComma (!comma "," expressionNoComma)+
+}
+
+ExpressionStatement {
+  expression semi
+}
+
+expressionNoComma {
+  AssignmentExpression |
+  NewSlotExpression |
+  TernaryExpression |
+  ArithmeticExpression |
+  RelationalExpression |
+  LogicalExpression |
+  InExpression |
+  InstanceofExpression |
+  TypeofExpression |
+  BitwiseExpression |
+  TableExpression |
+  DelegateExpression |
+  CloneExpression |
+  ArrayExpression |
+  DeleteExpression |
+  FunctionCallExpression |
+  ParenthesizedExpression |
+  kw<"null"> |
+  kw<"this"> |
+  kw<"parent"> |
+  kw<"vargc"> |
+  kw<"vargv"> |
+  kw<"true"> |
+  kw<"false"> |
+  String |
+  Char |
+  Integer |
+  Float |
+  DerefExpression
+}
+
+DerefExpression {
+  expressionNoComma !member "." Identifier |
+  expressionNoComma !member "[" expressionNoComma "]" |
+  Identifier
+}
+
+AssignmentExpression {
+  DerefExpression "=" expressionNoComma
+}
+
+NewSlotExpression {
+  DerefExpression "<-" expressionNoComma
+}
+
+TernaryExpression {
+  expressionNoComma !ternary LogicOp<"?"> expressionNoComma LogicOp<":"> expressionNoComma
+}
+
+ArithmeticExpression {
+  expressionNoComma (!plus ArithOp<"+" | "-"> | !times ArithOp<"*" | "%"> | !times divide) expressionNoComma |
+  DerefExpression !assign UpdateOp<("+=" | "-=" | "*=" | "/=" | "%=")> expressionNoComma |
+  DerefExpression !postfix ArithOp<("++" | "--")>
+}
+
+RelationalExpression {
+  expressionNoComma !rel CompareOp<("==" | "<" | "<=" | ">" | ">=" | "!=")> expressionNoComma
+}
+
+LogicalExpression {
+  expressionNoComma (!and LogicOp<"&&"> | !or LogicOp<"||">) expressionNoComma |
+  !prefix LogicOp<"!"> expressionNoComma
+}
+
+InExpression {
+  expressionNoComma !rel kw<"in"> expressionNoComma
+}
+
+InstanceofExpression {
+  expressionNoComma !rel kw<"instanceof"> expressionNoComma
+}
+
+TypeofExpression {
+  !typeof kw<"typeof"> expressionNoComma
+}
+
+BitwiseExpression {
+  expressionNoComma (!bitOr BitOp<"|"> | !bitAnd BitOp<"&"> | !bitXor BitOp<"^"> | !shift BitOp<"<<" | ">>" | ">>>">) expressionNoComma |
+  !prefix BitOp<"~"> expressionNoComma
+}
+
+TableExpression {
+  "{" tableBody? "}"
+}
+
+tableBody {
+  tableEntry ("," tableEntry)*
+}
+
+tableEntry {
+  Identifier "=" expressionNoComma |
+  "[" expression "]" "=" expressionNoComma
+}
+
+DelegateExpression {
+  kw<"delegate"> expression ":" expression
+}
+
+CloneExpression {
+  !typeof kw<"clone"> expressionNoComma
+}
+
+ArrayExpression {
+  "[" arrayBody? "]"
+}
+
+arrayBody {
+  expressionNoComma ("," expressionNoComma)*
+}
+
+DeleteExpression {
+  !typeof kw<"delete"> DerefExpression
+}
+
+FunctionCallExpression {
+  expressionNoComma !call "(" expressionList? ")"
+}
+
+expressionList {
+  expressionNoComma ("," expressionNoComma)*
+}
+
+ParenthesizedExpression {
+  "(" expression ")"
+}
+
+@skip {} {
+  Char[isolate] {
+    "'" (charContent | Escape) "'"
+  }
+
+  String[isolate] {
+    '"' (stringContentDouble | Escape)* '"' |
+    '@"' (stringContentVerbatim)* '"'
+  }
+
+  BlockComment[isolate] { "/*" (blockCommentContent | blockCommentNewline)* blockCommentEnd }
+}
+
+kw<term> { @specialize[@name={term}]<Identifier, term> }
+
+semi { ";" | insertSemi }
+
+@skip { spaces | newline | LineComment | BlockComment }
+
+@context trackNewline from "./squirrel_tokens.ts"
+
+@local tokens {
+  blockCommentEnd { "*/" }
+  blockCommentNewline { "\n" }
+  @else blockCommentContent
+}
+
+@tokens {
+  spaces[@export] { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+ }
+  newline[@export] { $[\r\n\u2028\u2029] }
+
+  LineComment[isolate] { "//" ![\n]* }
+
+  divide[@name=ArithOp] { "/" }
+
+  @precedence { "/*", LineComment, divide }
+
+  Escape {
+    "\\" ($[tabnrvf"'0] | "\\" | "x" hex? hex? hex? hex)
+  }
+
+  stringContentDouble { ![\\\n"]+ }
+  stringContentVerbatim { !["]+ }
+  charContent { ![\\\n'] }
+
+  ArithOp<expr> { expr }
+  LogicOp<expr> { expr }
+  BitOp<expr> { expr }
+  CompareOp<expr> { expr }
+  UpdateOp<expr> { expr }
+
+  hex { @digit | $[a-fA-F] }
+
+  Float {
+    $[-+]? @digit+ "." @digit* ($[eE] $[-+]? @digit+)?
+  }
+
+  Integer {
+    $[-+]? ("0" $[xX] hex+ |
+    "0" $[0-7]+ |
+    @digit+)
+  }
+
+  @precedence { Float, Integer }
+
+  "="[@name=Equals]
+  "<-"[@name=NewSlot]
+  "..."[@name=Vargs]
+
+  Identifier { $[a-zA-Z_]+$[a-zA-Z_0-9]* }
+
+  "(" ")"
+  "{" "}"
+  "[" "]"
+
+  "." "," ";" ":" "::"
+}
+
+@external tokens insertSemicolon from "./squirrel_tokens.ts" { insertSemi }
+
+@external propSource squirrelHighlight from "./squirrel_highlight.ts"
+
+@detectDelim

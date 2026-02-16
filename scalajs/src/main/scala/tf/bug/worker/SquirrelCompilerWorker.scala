@@ -18,7 +18,7 @@ object SquirrelCompilerWorker {
 
     WasmApi.get.`then` { (wasm: WasmApi) =>
       val outBuf = wasm.outBufferInit()
-      val vm = wasm.sqOpen()
+      val vm = wasm.sqOpen(1024)
       val emptyString = wasm.stringToNewUtf8("")
 
       js.Dynamic.global.onmessage =
