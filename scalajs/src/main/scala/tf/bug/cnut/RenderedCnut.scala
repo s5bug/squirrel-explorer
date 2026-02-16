@@ -17,7 +17,7 @@ final case class RenderedCnut(
 object RenderedCnut {
 
   given renderedCnutCodec: JsonValueCodec[RenderedCnut] = JsonCodecMaker.make(CodecMakerConfig.withAllowRecursiveTypes(true))
-  
+
   private final val spaces256 = " " * 256
   // FIXME make this accept the builder and be tailrec
   inline def spaces(n: Int): String = spaces256.substring(0, n)
@@ -89,7 +89,7 @@ object RenderedCnut {
 
     Arr(IArray.unsafeFromArray(result), from, to)
   }
-  
+
   private def renderIntArray[U <: Node](indent: Int, builder: StringBuilder, recurse: (Int, StringBuilder, Int) => U, value: NArray[Int])(using ct: ClassTag[U]): Arr[U] = {
     val from = builder.length
     builder ++= "[\n"
@@ -339,9 +339,9 @@ object RenderedCnut {
     val to = builder.length
 
     val me = Instruction(it, arg0, arg1, arg2, arg3, from, to)
-    
+
     diagnosticBuilder.visit(value, me, parentFunction, idx)
-    
+
     me
   }
 
@@ -358,31 +358,31 @@ object RenderedCnut {
 
     InstructionType(value, from, to)
   }
-  
+
   def diff(previous: RenderedCnut, next: RenderedCnut): js.Array[typings.codemirrorState.anon.From] = {
     val builder: js.Array[typings.codemirrorState.anon.From] = js.Array()
-    
+
     diffClosure(builder, previous, previous.renderedClosure, next, next.renderedClosure)
-    
+
     builder
   }
-  
+
   private def replace(pc: RenderedCnut, pn: Node, nc: RenderedCnut, nn: Node): typings.codemirrorState.anon.From = {
     val c = typings.codemirrorState.anon.From(pn.from)
     c.to = pn.to
     c.insert = nc.string.substring(nn.from, nn.to)
     c
   }
-  
+
   private def diffClosure(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: Closure, nc: RenderedCnut, nv: Closure): Unit = {
     diffLong(acc, pc, pv.sizeOfSqChar, nc, nv.sizeOfSqChar)
     diffFunctionProto(acc, pc, pv.funcProto, nc, nv.funcProto)
   }
-  
+
   private def diffInt(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: RenderedInt, nc: RenderedCnut, nv: RenderedInt): Unit = {
     if pv.value != nv.value then acc.push(replace(pc, pv, nc, nv))
   }
-  
+
   private def diffFunctionProto(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: FunctionProto, nc: RenderedCnut, nv: FunctionProto): Unit = {
     diffObj(acc, pc, pv.sourceName, nc, nv.sourceName)
     diffObj(acc, pc, pv.name, nc, nv.name)
@@ -397,18 +397,18 @@ object RenderedCnut {
     diffInt(acc, pc, pv.bgenerator, nc, nv.bgenerator)
     diffInt(acc, pc, pv.varparams, nc, nv.varparams)
   }
-  
+
   private def diffObj(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: Obj, nc: RenderedCnut, nv: Obj): Unit = {
     if pv.underlying != nv.underlying then acc.push(replace(pc, pv, nc, nv))
   }
-  
+
   private def diffArr[T <: Node](
     acc: js.Array[typings.codemirrorState.anon.From],
     recurse: (js.Array[typings.codemirrorState.anon.From], RenderedCnut, T, RenderedCnut, T) => Unit,
     pc: RenderedCnut, pv: Arr[T], nc: RenderedCnut, nv: Arr[T]
   ): Unit = {
     val matching = Math.min(pv.value.length, nv.value.length)
-    
+
     if matching != 0 then {
       // change the items that match in length
       var i = 0
@@ -430,28 +430,28 @@ object RenderedCnut {
       acc.push(replace(pc, pv, nc, nv))
     }
   }
-  
+
   private def diffOuterValue(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: OuterValue, nc: RenderedCnut, nv: OuterValue): Unit = {
     diffOuterType(acc, pc, pv.outerType, nc, nv.outerType)
     diffObj(acc, pc, pv.src, nc, nv.src)
     diffObj(acc, pc, pv.name, nc, nv.name)
   }
-  
+
   private def diffOuterType(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: OuterType, nc: RenderedCnut, nv: OuterType): Unit = {
     if pv.underlying != nv.underlying then acc.push(replace(pc, pv, nc, nv))
   }
-  
+
   private def diffLocalVarInfo(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: LocalVarInfo, nc: RenderedCnut, nv: LocalVarInfo): Unit = {
     diffObj(acc, pc, pv.name, nc, nv.name)
     diffLong(acc, pc, pv.pos, nc, nv.pos)
     diffLong(acc, pc, pv.startOp, nc, nv.startOp)
     diffLong(acc, pc, pv.endOp, nc, nv.endOp)
   }
-  
+
   private def diffLong(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: RenderedLong, nc: RenderedCnut, nv: RenderedLong): Unit = {
     if pv.value != nv.value then acc.push(replace(pc, pv, nc, nv))
   }
-  
+
   private def diffInstruction(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: Instruction, nc: RenderedCnut, nv: Instruction): Unit = {
     diffInstructionType(acc, pc, pv.instructionType, nc, nv.instructionType)
     diffInt(acc, pc, pv.arg0, nc, nv.arg0)
@@ -459,7 +459,7 @@ object RenderedCnut {
     diffInt(acc, pc, pv.arg2, nc, nv.arg2)
     diffInt(acc, pc, pv.arg3, nc, nv.arg3)
   }
-  
+
   private def diffInstructionType(acc: js.Array[typings.codemirrorState.anon.From], pc: RenderedCnut, pv: InstructionType, nc: RenderedCnut, nv: InstructionType): Unit = {
     if pv.underlying != nv.underlying then acc.push(replace(pc, pv, nc, nv))
   }

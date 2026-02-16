@@ -136,7 +136,8 @@ object SquirrelExplorerFrontend {
               CnutEditorState.cnutField,
               LezerCnutLanguage.cnut,
               LezerCnutLanguage.cnutLinter(dispatch),
-            )
+            ),
+          LezerCnutLanguage.diffCnut
         ).flatTap { mv =>
           val renderUploadedToA = uploadedResult.discrete.unNone.foreach { rr =>
             replaceView(mv.a, rr)

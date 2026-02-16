@@ -69,6 +69,10 @@ object LezerCnutLanguage {
 
     IO.pure(jsArray)
   }
+
+  @js.native
+  @JSImport("@/diff_cnut.ts", "diff_cnut")
+  val diffCnut: js.Function2[String, String, js.Array[typings.codemirrorMerge.mod.Change]] = js.native
 }
 
 object DiagnosticArrayCollector extends Collector[codemirrorLint.Diagnostic] {

@@ -86,13 +86,12 @@ object CodemirrorMergeView {
   def apply(
     a: codemirrorState.EditorStateConfig,
     b: codemirrorState.EditorStateConfig,
+    differ: js.Function2[String, String, js.Array[codemirrorMerge.Change]]
   ): Resource[IO, CodemirrorMergeView] = {
     Resource.make(IO {
       new codemirrorMerge.MergeView(
         codemirrorMerge.DirectMergeConfig(a, b)
-        // TODO implement smart structural diffing between compiled files
-        // this will allow sending smaller changesets to the merge viewer
-//          .setDiffConfig(codemirrorMerge.DiffConfig().setScanLimit(8192))
+          .setDiffConfig(codemirrorMerge.DiffConfig().setOverride(differ))
       )
     })(ev => IO {
       ev.destroy()
