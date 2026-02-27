@@ -478,6 +478,7 @@ function constructor_diff(a: string, fromA: number, toA: number, b: string, from
 
 export function diff_cnut(a: string, b: string): readonly Change[] {
   // we expect both texts to either be empty or start with Closure(
+  // FIXME the above is not true
   if(a.length === 0 && b.length == 0) {
     return []
   } else if (a.length === 0 || b.length == 0) {
