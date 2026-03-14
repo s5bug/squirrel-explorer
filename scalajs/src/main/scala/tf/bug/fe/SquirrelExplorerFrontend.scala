@@ -82,6 +82,9 @@ object SquirrelExplorerFrontend {
         transactionSpec.setChanges(change)
       case Some(preDiff) =>
         val changes: scalajs.js.Array[typings.codemirrorState.anon.From] = RenderedCnut.diff(preDiff, next)
+        if changes.nonEmpty then {
+          scalajs.js.Dynamic.global.console.log("changes: ", changes)
+        }
         transactionSpec.setChanges(changes.asInstanceOf[scalajs.js.Array[Any]])
     }
 

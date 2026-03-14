@@ -476,6 +476,8 @@ function constructor_diff(a: string, fromA: number, toA: number, b: string, from
   }
 }
 
+const fastLength = 65536
+
 export function diff_cnut(a: string, b: string): readonly Change[] {
   // we expect both texts to either be empty or start with Closure(
   // FIXME the above is not true
@@ -483,7 +485,12 @@ export function diff_cnut(a: string, b: string): readonly Change[] {
     return []
   } else if (a.length === 0 || b.length == 0) {
     return [new Change(0, a.length, 0, b.length)]
+  } else if(a.length < fastLength || b.length < fastLength) {
+    // if the change is small we can just use the non-contextual alg
+    return normalize(a, b, findDiff(a, 0, a.length, b, 0, b.length))
   } else {
+    // if the change is large we should look for a matching constructor and diff from there
+    // FIXME this assumes the start of string
     return normalize(a, b, constructor_diff(a, 0, a.length, b, 0, b.length))
   }
 }

@@ -425,7 +425,7 @@ object RenderedCnut {
         c.insert = nc.string.substring(nv.value(matching - 1).to, nv.to)
         acc.push(c)
       }
-    } else {
+    } else if pv.value.length != nv.value.length then {
       // replace the whole array
       acc.push(replace(pc, pv, nc, nv))
     }
