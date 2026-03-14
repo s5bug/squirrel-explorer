@@ -33,3 +33,10 @@ html, body {
 .cm-editor {
   height: 100%;
 }
+
+code.cm-se-indexWidget {
+  margin: 0 0.5ch;
+  padding: 0 0.5ch;
+  background: rgba(200, 200, 200, 0.4);
+  color: rgba(80, 80, 80, 0.8);
+}
