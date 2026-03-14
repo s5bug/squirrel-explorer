@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import fs2.*
 import fs2.concurrent.SignallingRef
 import fs2.dom.*
+import tf.bug.cnut.RenderedCnut
 import tf.bug.fe.*
 
 object SquirrelExplorer extends IOWebApp {
@@ -16,8 +17,8 @@ object SquirrelExplorer extends IOWebApp {
       CompilerWorkerThread.default,
       RendererWorkerThread.default,
       RendererWorkerThread.default,
-      SignallingRef.of[IO, RenderResult](RenderResult.empty).toResource,
-      SignallingRef.of[IO, RenderResult](RenderResult.empty).toResource
+      SignallingRef.of[IO, Option[RenderedCnut]](None).toResource,
+      SignallingRef.of[IO, Option[RenderedCnut]](None).toResource
     ).parFlatMapN { (compilerWk, compiledRenderWk, uploadedRenderWk, compiledResult, uploadedResult) =>
       Resource.suspend(IO.fromPromise(IO.delay { scalajs.js.dynamicImport {
         SquirrelExplorerFrontend.program(compilerWk, compiledRenderWk, uploadedRenderWk, compiledResult, uploadedResult)

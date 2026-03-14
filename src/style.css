@@ -1,6 +1,7 @@
 html, body {
   margin: 0;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
 }
 
 #app {
@@ -9,25 +10,26 @@ html, body {
 
 #grid-container {
   height: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
+  display: flex;
 }
 
 #grid-container > #left-editor {
   height: 100%;
-  grid-column: 1;
-  grid-row: 1;
+  flex: 1;
 }
 
 #grid-container > #right-panel {
   height: 100%;
-  grid-column: 2;
-  grid-row: 1;
+  flex: 1;
   display: flex;
   flex-flow: column;
 }
 
 #grid-container > #right-panel > #right-editor {
   flex: 1 1 auto;
+  overflow-y: scroll;
+}
+
+.cm-editor {
+  height: 100%;
 }

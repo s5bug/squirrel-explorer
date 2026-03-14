@@ -29,7 +29,7 @@ trait WasmApi extends js.Object {
     js.native
 
   @JSName("_sq_open")
-  def sqOpen(): Int =
+  def sqOpen(stackSize: Int): Int =
     js.native
     
   @JSName("_sq_close")
