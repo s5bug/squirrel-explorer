@@ -18,7 +18,7 @@
     "vite": "^8.0.2"
   },
   "dependencies": {
-    "@codemirror/language": "^6.12.2",
+    "@codemirror/language": "^6.12.3",
     "@codemirror/lint": "^6.9.5",
     "@codemirror/merge": "^6.12.1",
     "@codemirror/state": "^6.6.0",
