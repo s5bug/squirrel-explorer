@@ -34,7 +34,7 @@ jobs:
           node-version: latest
           cache: 'pnpm'
       - name: Set up Emscripten
-        uses: mymindstorm/setup-emsdk@v14
+        uses: mymindstorm/setup-emsdk@v15
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
