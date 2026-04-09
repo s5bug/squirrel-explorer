@@ -23,7 +23,7 @@
     "@codemirror/merge": "^6.12.1",
     "@codemirror/state": "^6.6.0",
     "@codemirror/view": "^6.41.0",
-    "@lezer/common": "^1.5.1",
+    "@lezer/common": "^1.5.2",
     "@lezer/highlight": "^1.2.3",
     "@lezer/lr": "^1.4.8",
     "@replit/codemirror-minimap": "^0.5.2",
