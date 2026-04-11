@@ -30,11 +30,5 @@
     "@types/js-string-escape": "^1.0.3",
     "codemirror": "^6.0.2",
     "js-string-escape": "^1.0.1"
-  },
-  "pnpm": {
-    "overrides": {
-      "@scala-js/vite-plugin-scalajs>vite": "^8.0.8",
-      "esbuild": "-"
-    }
   }
 }
