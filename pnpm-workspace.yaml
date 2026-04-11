@@ -1,0 +1,3 @@
+overrides:
+  "@scala-js/vite-plugin-scalajs>vite": "$vite"
+  "esbuild": "-"
