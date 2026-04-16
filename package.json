@@ -25,7 +25,7 @@
     "@codemirror/view": "^6.41.0",
     "@lezer/common": "^1.5.2",
     "@lezer/highlight": "^1.2.3",
-    "@lezer/lr": "^1.4.8",
+    "@lezer/lr": "^1.4.9",
     "@replit/codemirror-minimap": "^0.5.2",
     "@types/js-string-escape": "^1.0.3",
     "codemirror": "^6.0.2",
