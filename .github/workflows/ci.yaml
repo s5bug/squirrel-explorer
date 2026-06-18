@@ -18,7 +18,7 @@ jobs:
       JVM_OPTS:  -Xms6G -Xmx6G -Xss4M
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Cache Maven artifacts
         uses: coursier/cache-action@v8
         with:
