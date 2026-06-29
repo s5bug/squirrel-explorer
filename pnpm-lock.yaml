@@ -13,8 +13,8 @@ importers:
   .:
     dependencies:
       '@codemirror/language':
-        specifier: ^6.12.3
-        version: 6.12.3
+        specifier: ^6.12.4
+        version: 6.12.4
       '@codemirror/lint':
         specifier: ^6.9.7
         version: 6.9.7
@@ -38,7 +38,7 @@ importers:
         version: 1.4.10
       '@replit/codemirror-minimap':
         specifier: ^0.5.2
-        version: 0.5.2(@codemirror/language@6.12.3)(@codemirror/lint@6.9.7)(@codemirror/state@6.6.0)(@codemirror/view@6.43.1)(@lezer/common@1.5.2)(@lezer/highlight@1.2.3)
+        version: 0.5.2(@codemirror/language@6.12.4)(@codemirror/lint@6.9.7)(@codemirror/state@6.6.0)(@codemirror/view@6.43.1)(@lezer/common@1.5.2)(@lezer/highlight@1.2.3)
       '@types/js-string-escape':
         specifier: ^1.0.3
         version: 1.0.3
@@ -76,8 +76,8 @@ packages:
   '@codemirror/commands@6.10.3':
     resolution: {integrity: sha512-JFRiqhKu+bvSkDLI+rUhJwSxQxYb759W5GBezE8Uc8mHLqC9aV/9aTC7yJSqCtB3F00pylrLCwnyS91Ap5ej4Q==}
 
-  '@codemirror/language@6.12.3':
-    resolution: {integrity: sha512-QwCZW6Tt1siP37Jet9Tb02Zs81TQt6qQrZR2H+eGMcFsL1zMrk2/b9CLC7/9ieP1fjIUMgviLWMmgiHoJrj+ZA==}
+  '@codemirror/language@6.12.4':
+    resolution: {integrity: sha512-1q4PaT+o6PbgpkJt4Q8Fv5XJxTy4FUZ4MWETtyiDw3J0Pyr9E2vqcKL+k9wcvjNTIsauxvE7OfmWj3FRPHQ76A==}
 
   '@codemirror/lint@6.9.7':
     resolution: {integrity: sha512-28/+iWLYxKxsvGYhSYL7zaCZqLz5+FFFDq9tVsvGv9kv8RY4fFAchJ5WX9M3YrrRlTIsECjsXPqeNgnSmNP2dg==}
@@ -469,19 +469,19 @@ snapshots:
 
   '@codemirror/autocomplete@6.20.1':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.1
       '@lezer/common': 1.5.2
 
   '@codemirror/commands@6.10.3':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.1
       '@lezer/common': 1.5.2
 
-  '@codemirror/language@6.12.3':
+  '@codemirror/language@6.12.4':
     dependencies:
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.1
@@ -498,7 +498,7 @@ snapshots:
 
   '@codemirror/merge@6.12.2':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.1
       '@lezer/highlight': 1.2.3
@@ -563,9 +563,9 @@ snapshots:
 
   '@oxc-project/types@0.133.0': {}
 
-  '@replit/codemirror-minimap@0.5.2(@codemirror/language@6.12.3)(@codemirror/lint@6.9.7)(@codemirror/state@6.6.0)(@codemirror/view@6.43.1)(@lezer/common@1.5.2)(@lezer/highlight@1.2.3)':
+  '@replit/codemirror-minimap@0.5.2(@codemirror/language@6.12.4)(@codemirror/lint@6.9.7)(@codemirror/state@6.6.0)(@codemirror/view@6.43.1)(@lezer/common@1.5.2)(@lezer/highlight@1.2.3)':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@codemirror/lint': 6.9.7
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.1
@@ -662,7 +662,7 @@ snapshots:
     dependencies:
       '@codemirror/autocomplete': 6.20.1
       '@codemirror/commands': 6.10.3
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@codemirror/lint': 6.9.7
       '@codemirror/search': 6.6.0
       '@codemirror/state': 6.6.0
