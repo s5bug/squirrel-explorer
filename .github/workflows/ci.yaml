@@ -50,6 +50,6 @@ jobs:
           java-version: 25
           cache: sbt
       - name: Setup SBT
-        uses: sbt/setup-sbt@v1
+        uses: sbt/setup-sbt@v1.5.4
       - name: Build frontend
         run: pnpm run build
