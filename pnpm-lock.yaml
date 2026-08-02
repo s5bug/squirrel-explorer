@@ -4,8 +4,14 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    vite:
+      specifier: ^8.2.0
+      version: 8.2.0
+
 overrides:
-  '@scala-js/vite-plugin-scalajs>vite': ^8.1.5
+  '@scala-js/vite-plugin-scalajs>vite': ^8.2.0
   esbuild: '-'
 
 importers:
@@ -65,7 +71,7 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       vite:
-        specifier: ^8.2.0
+        specifier: 'catalog:'
         version: 8.2.0(@types/node@26.1.2)
 
 packages:
