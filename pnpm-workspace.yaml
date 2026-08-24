@@ -1,5 +1,5 @@
 catalog:
-  vite: ^8.2.1
+  vite: ^8.2.2
 overrides:
   "@scala-js/vite-plugin-scalajs>vite": "catalog:"
   "esbuild": "-"
