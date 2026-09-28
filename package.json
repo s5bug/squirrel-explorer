@@ -10,7 +10,7 @@
     "clean": "rimraf -G dist && rimraf -G wasm/buildDir && cd scalajs && sbt clean"
   },
   "devDependencies": {
-    "@lezer/generator": "^1.8.0",
+    "@lezer/generator": "^1.8.1",
     "@scala-js/vite-plugin-scalajs": "1.1.0",
     "@types/node": "^26.6.2",
     "rimraf": "^6.1.3",

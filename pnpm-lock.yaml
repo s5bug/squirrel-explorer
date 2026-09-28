@@ -56,8 +56,8 @@ importers:
         version: 1.0.1
     devDependencies:
       '@lezer/generator':
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.8.1
+        version: 1.8.1
       '@scala-js/vite-plugin-scalajs':
         specifier: 1.1.0
         version: 1.1.0(@types/node@26.6.2)
@@ -103,8 +103,8 @@ packages:
   '@lezer/common@1.5.2':
     resolution: {integrity: sha512-sxQE460fPZyU3sdc8lafxiPwJHBzZRy/udNFynGQky1SePYBdhkBl1kOagA9uT3pxR8K09bOrmTUqA9wb/PjSQ==}
 
-  '@lezer/generator@1.8.0':
-    resolution: {integrity: sha512-/SF4EDWowPqV1jOgoGSGTIFsE7Ezdr7ZYxyihl5eMKVO5tlnpIhFcDavgm1hHY5GEonoOAEnJ0CU0x+tvuAuUg==}
+  '@lezer/generator@1.8.1':
+    resolution: {integrity: sha512-7q7szXqT7EPTs6SODBl58Qoz/4OrhNvm5pW4lbu1ZDnG5e0nn7drLzeN9Nxkm8j/1iMs5QZ9j3i4SV+W4Z6SQA==}
     hasBin: true
 
   '@lezer/highlight@1.2.3':
@@ -519,7 +519,7 @@ snapshots:
 
   '@lezer/common@1.5.2': {}
 
-  '@lezer/generator@1.8.0':
+  '@lezer/generator@1.8.1':
     dependencies:
       '@lezer/common': 1.5.2
       '@lezer/lr': 1.4.10
