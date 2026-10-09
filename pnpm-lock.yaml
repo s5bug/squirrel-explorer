@@ -7,11 +7,11 @@ settings:
 catalogs:
   default:
     vite:
-      specifier: ^8.3.2
-      version: 8.3.2
+      specifier: ^8.3.3
+      version: 8.3.3
 
 overrides:
-  '@scala-js/vite-plugin-scalajs>vite': ^8.3.2
+  '@scala-js/vite-plugin-scalajs>vite': ^8.3.3
   esbuild: '-'
 
 importers:
@@ -72,7 +72,7 @@ importers:
         version: 6.0.3
       vite:
         specifier: 'catalog:'
-        version: 8.3.2(@types/node@26.6.4)
+        version: 8.3.3(@types/node@26.6.4)
 
 packages:
 
@@ -415,14 +415,13 @@ packages:
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
-  vite@8.3.2:
-    resolution: {integrity: sha512-SQr1x6W5vVSbROg7vsyXIaxK9b0G7zsT68acdWWRmnBUsgDieLCRG+Rep9WdZgcposvv/GSnr4GUUBqB3vXq6w==}
+  vite@8.3.3:
+    resolution: {integrity: sha512-cTAldKPImjg6c+gk48U19POPn3GCBzZwpdsN8ZMEEcbpes+6/wvfqUd0C2y3qYY4wsj8PwgFwrZ/1jBPVttMSg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
       '@vitejs/devtools': ^0.7.1
-      esbuild: '*'
       jiti: '>=1.21.0'
       less: ^4.0.0
       sass: ^1.70.0
@@ -436,8 +435,6 @@ packages:
       '@types/node':
         optional: true
       '@vitejs/devtools':
-        optional: true
-      esbuild:
         optional: true
       jiti:
         optional: true
@@ -595,11 +592,10 @@ snapshots:
 
   '@scala-js/vite-plugin-scalajs@1.1.0(@types/node@26.6.4)':
     dependencies:
-      vite: 8.3.2(@types/node@26.6.4)
+      vite: 8.3.3(@types/node@26.6.4)
     transitivePeerDependencies:
       - '@types/node'
       - '@vitejs/devtools'
-      - esbuild
       - jiti
       - less
       - sass
@@ -766,7 +762,7 @@ snapshots:
 
   undici-types@8.9.0: {}
 
-  vite@8.3.2(@types/node@26.6.4):
+  vite@8.3.3(@types/node@26.6.4):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
